@@ -11,10 +11,10 @@ dependencies = [
 ]
 
 dynamic = ["version"]
-name = "classy_sz"
+name = "classy_szfast"
 maintainers = [{name = "Boris Bolliet",email="bb667@cam.ac.uk"}]
-description = "The class_sz code from https://github.com/CLASS-SZ"
-readme = "class-sz/README.md"
+description = "The accelerator of the class_sz code from https://github.com/CLASS-SZ"
+readme = "https://github.com/CLASS-SZ/.github/blob/main/profile/README.md"
 
 [project.urls]
 Homepage = "https://github.com/CLASS-SZ"
