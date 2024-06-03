@@ -12,7 +12,7 @@ setup(
     author='Boris Bolliet et al',
     author_email='boris.bolliet@gmail.com',
     url='https://github.com/CLASS-SZ/class_sz',
-    download_url='https://github.com/CLASS-SZ/class_sz',
+    download_url='https://github.com/CLASS-SZ/classy_szfast',
     install_requires=[
         "tensorflow==2.13.0",
         "tensorflow-probability==0.21.0",
