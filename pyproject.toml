@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 dependencies = [
-    "numpy",
-    "scipy",
-    "cython",
-    "classy_szfast"
+        "tensorflow==2.13.0",
+        "tensorflow-probability==0.21.0",
+        "cosmopower",
+        "mcfit"
 ]
 
 dynamic = ["version"]
