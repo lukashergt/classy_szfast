@@ -5,7 +5,7 @@ from setuptools import setup,find_packages
 
 setup(
     name="classy_szfast",
-    version="0.0.3",
+    version="0.0.5",
     description="Python package for fast class_sz",
     zip_safe=False,
     packages=find_packages(),
