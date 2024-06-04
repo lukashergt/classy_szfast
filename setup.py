@@ -14,4 +14,10 @@ setup(
     url='https://github.com/CLASS-SZ/classy_szfast',
     download_url='https://github.com/CLASS-SZ/classy_szfast',
     package_data={},
+    install_requires=[
+        "tensorflow==2.13.0",
+        "tensorflow-probability==0.21.0",
+        "cosmopower",
+        "mcfit"
+    ],
 )
