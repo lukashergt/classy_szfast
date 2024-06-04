@@ -16,7 +16,7 @@ increment_version() {
     patch=0
     minor=$((minor + 1))
   fi
-  if [ $minor -ge 1000 ]; then
+  if [ $minor -ge 10 ]; then
     minor=0
     major=$((major + 1))
   fi
