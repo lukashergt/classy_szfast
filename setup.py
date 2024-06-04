@@ -37,7 +37,7 @@ setup(
         'Intended Audience :: Science/Research'
     ],
     name="classy_szfast",
-    version="0.0.7",
+    version="0.0.8",
     description="Python package for fast class_sz",
     # long_description=long_description,
     long_description_content_type='text/markdown',
