@@ -6,5 +6,9 @@ from .pks_and_sigmas import *
 
 from pathlib import Path
 import sys
-from .custom_profiles import *
-from .custom_bias import *
+
+
+from .custom_profiles.custom_profiles import *
+
+
+from .custom_bias.custom_bias import *
