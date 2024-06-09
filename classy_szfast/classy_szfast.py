@@ -132,6 +132,7 @@ class Class_szfast(object):
                                                        self.cszfast_gas_pressure_xgrid_xmax,
                                                        self.cszfast_gas_pressure_xgrid_nx)
 
+        self.params_for_emulators = {}
 
     def find_As(self,params_cp):
         # params_cp = self.params_cp
@@ -490,7 +491,55 @@ class Class_szfast(object):
         self.cszfast_pk_grid_pknl = pk_re
         self.cszfast_pk_grid_pknl_flat = pk_re.flatten()
         return pk_re, k_arr, z_arr
+    
 
+    def calculate_pkl_at_z(self,
+                           z_asked,
+                          params_values_dict=None):
+        nz = self.cszfast_pk_grid_nz # number of z-points in redshift data [21oct22] --> set to 80
+        zmax = self.cszfast_pk_grid_zmax # max redshift of redshift data [21oct22] --> set to 4 because boltzmannbase.py wants to extrapolate
+        z_arr = np.linspace(0.,zmax,nz) # z-array of redshift data [21oct22] oct 26 22: nz = 1000, zmax = 20
+
+        nk = self.cp_nk
+        ndspl = self.cp_ndspl_k
+        k_arr = np.geomspace(self.cp_kmin,self.cp_kmax,nk)[::ndspl]  # oct 26 22 : (1e-4,50.,5000), jan 10: ndspl
+
+
+        if params_values_dict:
+            params_values = params_values_dict.copy()
+        else:
+            params_values = self.params_for_emulators
+
+
+        params_dict = {}
+        for k,v in zip(params_values.keys(),params_values.values()):
+            params_dict[k]=[v]
+
+        if 'm_ncdm' in params_dict.keys():
+            if isinstance(params_dict['m_ncdm'][0],str): 
+                params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
+
+
+        predicted_pk_spectrum_z = []
+
+        z_asked = z_asked
+        params_dict_pp = params_dict.copy()
+        params_dict_pp['z_pk_save_nonclass'] = [z_asked]
+        predicted_pk_spectrum_z.append(self.cp_pkl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0])
+
+        predicted_pk_spectrum = np.asarray(predicted_pk_spectrum_z)
+
+        # weird scaling to get rid off
+        # scaling factor for the pk emulator:
+        ls = np.arange(2,self.cp_nk+2)[::ndspl] # jan 10 ndspl
+        dls = ls*(ls+1.)/2./np.pi
+        pk = 10.**predicted_pk_spectrum
+        pk_re =  ((dls)**-1*pk)
+        pk_re = np.transpose(pk_re)
+
+        
+        return pk_re, k_arr
+    
 
     def calculate_hubble(self,
                                  # cosmo_model = self.cosmo_model,
