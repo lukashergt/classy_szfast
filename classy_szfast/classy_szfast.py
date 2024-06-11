@@ -12,6 +12,24 @@ import pickle
 
 H_units_conv_factor = {"1/Mpc": 1, "km/s/Mpc": Const.c_km_s}
 
+
+def update_params_with_defaults(params_values, self):
+    """
+    Update params_values with default values if they don't already exist.
+
+    Args:
+    params_values (dict): Dictionary containing parameter values.
+    self (object): The object containing emulator_dict and cosmo_model attributes.
+    """
+    # Retrieve default values
+    default_values = self.emulator_dict[self.cosmo_model]['default']
+    
+    # Update params_values with default values if key does not exist
+    for key, value in default_values.items():
+        if key not in params_values:
+            params_values[key] = value
+
+
 class Class_szfast(object):
     def __init__(self,
                 #lowring=False,  some options if needed
@@ -32,6 +50,8 @@ class Class_szfast(object):
         self.cp_da_nn = cp_da_nn
         self.cp_h_nn = cp_h_nn
         self.cp_s8_nn = cp_s8_nn
+
+        self.emulator_dict = emulator_dict
 
         if dofftlog_alphas == True:
             self.cp_pkl_fftlog_alphas_nus = cp_pkl_fftlog_alphas_nus
@@ -86,7 +106,9 @@ class Class_szfast(object):
                                     2: 'neff',
                                     3: 'wcdm',
                                     4: 'ede',
-                                    5: 'mnu-3states'}
+                                    5: 'mnu-3states',
+                                    6: 'ede-v2'
+                                    }
                 self.cosmo_model = cosmo_model_dict[v]
 
             if k == 'use_Amod':
@@ -222,11 +244,13 @@ class Class_szfast(object):
                       want_ee=True,
                       want_pp=1,
                       **params_values_dict):
+        
         params_values = params_values_dict.copy()
-        # params_values['ln10^{10}A_s'] = params_values.pop("logA")
-        # print('in cmb:',params_values)
+        update_params_with_defaults(params_values, self)
+
+
         params_dict = {}
-        # print('cosmo_model',self.cosmo_model)
+
         for k,v in params_values.items():
             params_dict[k]=[v]
 
@@ -234,16 +258,45 @@ class Class_szfast(object):
             if isinstance(params_dict['m_ncdm'][0],str): 
                 params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
 
-        # print('params_dict',params_dict)
 
-        if want_tt:
-            self.cp_predicted_tt_spectrum = self.cp_tt_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
+
+        # if want_tt: for now always want_tt = True
+        self.cp_predicted_tt_spectrum = self.cp_tt_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
+
+        nl = len(self.cp_predicted_tt_spectrum)
+        cls = {}
+        cls['ell'] = np.arange(20000)
+        cls['tt'] = np.zeros(20000)
+        cls['te'] = np.zeros(20000)
+        cls['ee'] = np.zeros(20000)
+        cls['pp'] = np.zeros(20000)
+        cls['bb'] = np.zeros(20000)
+        lcp = np.asarray(cls['ell'][2:nl+2])
+
+        # print('cosmo_model:',self.cosmo_model,nl)
+        if self.cosmo_model == 'ede-v2':
+            factor_ttteee = 1./lcp**2 
+            factor_pp = 1./lcp**3
+        else:
+            factor_ttteee = 1./(lcp*(lcp+1.)/2./np.pi)
+            factor_pp = 1./(lcp*(lcp+1.))**2.        
+
+        self.cp_predicted_tt_spectrum *= factor_ttteee
+        
+
         if want_te:
             self.cp_predicted_te_spectrum = self.cp_te_nn[self.cosmo_model].predictions_np(params_dict)[0]
+            self.cp_predicted_te_spectrum *= factor_ttteee
         if want_ee:
             self.cp_predicted_ee_spectrum = self.cp_ee_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
+            self.cp_predicted_ee_spectrum *= factor_ttteee
         if want_pp:
             self.cp_predicted_pp_spectrum = self.cp_pp_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
+            self.cp_predicted_pp_spectrum *= factor_pp
+
+        
+
+        
         # print('>>> clssy_szfast.py cmb computed')
 
     def load_cmb_cls_from_file(self,**params_values_dict):

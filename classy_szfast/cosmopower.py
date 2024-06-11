@@ -30,7 +30,8 @@ cosmo_model_list = [
     'neff',
     'wcdm',
     'ede',
-    'mnu-3states'
+    'mnu-3states',
+    'ede-v2'
 ]
 
 emulator_dict = {}
@@ -40,6 +41,7 @@ emulator_dict['neff'] = {}
 emulator_dict['wcdm'] = {}
 emulator_dict['ede'] = {}
 emulator_dict['mnu-3states'] = {}
+emulator_dict['ede-v2'] = {}
 
 
 
@@ -100,13 +102,19 @@ emulator_dict['ede']['EE'] = 'EE_v1'
 emulator_dict['ede']['PP'] = 'PP_v1'
 emulator_dict['ede']['PKNL'] = 'PKNL_v1'
 emulator_dict['ede']['PKL'] = 'PKL_v1'
-# emulator_dict['ede']['PKLFFTLOG_ALPHAS_REAL'] = 'PKLFFTLOGALPHAS_creal_v1'
-# emulator_dict['ede']['PKLFFTLOG_ALPHAS_IMAG'] = 'PKLFFTLOGALPHAS_cimag_v1'
 emulator_dict['ede']['DER'] = 'DER_v1'
 emulator_dict['ede']['DAZ'] = 'DAZ_v1'
 emulator_dict['ede']['HZ'] = 'HZ_v1'
 emulator_dict['ede']['S8Z'] = 'S8Z_v1'
-
+emulator_dict['ede']['default'] = {}
+emulator_dict['ede']['default']['fEDE'] = 0.001
+emulator_dict['ede']['default']['tau_reio'] = 0.054
+emulator_dict['ede']['default']['log10z_c'] = 3.562 # e.g. from https://github.com/mwt5345/class_ede/blob/master/class/notebooks-ede/2-CMB-Comparison.ipynb
+emulator_dict['ede']['default']['thetai_scf'] = 2.83 # e.g. from https://github.com/mwt5345/class_ede/blob/master/class/notebooks-ede/2-CMB-Comparison.ipynb
+emulator_dict['ede']['default']['r'] = 0.
+emulator_dict['ede']['default']['N_ur'] = 0.00641
+emulator_dict['ede']['default']['N_ncdm'] = 3
+emulator_dict['ede']['default']['m_ncdm'] = 0.02
 
 
 emulator_dict['mnu-3states']['TT'] = 'TT_v1'
@@ -119,6 +127,29 @@ emulator_dict['mnu-3states']['DER'] = 'DER_v1'
 emulator_dict['mnu-3states']['DAZ'] = 'DAZ_v1'
 emulator_dict['mnu-3states']['HZ'] = 'HZ_v1'
 emulator_dict['mnu-3states']['S8Z'] = 'S8Z_v1'
+
+
+
+emulator_dict['ede-v2']['TT'] = 'TT_v2'
+emulator_dict['ede-v2']['TE'] = 'TE_v2'
+emulator_dict['ede-v2']['EE'] = 'EE_v2'
+emulator_dict['ede-v2']['PP'] = 'PP_v2'
+emulator_dict['ede-v2']['PKNL'] = 'PKNL_v2'
+emulator_dict['ede-v2']['PKL'] = 'PKL_v2'
+emulator_dict['ede-v2']['DER'] = 'DER_v2'
+emulator_dict['ede-v2']['DAZ'] = 'DAZ_v2'
+emulator_dict['ede-v2']['HZ'] = 'HZ_v2'
+emulator_dict['ede-v2']['S8Z'] = 'S8Z_v2'
+
+emulator_dict['ede-v2']['default'] = {}
+emulator_dict['ede-v2']['default']['fEDE'] = 0.001
+emulator_dict['ede-v2']['default']['tau_reio'] = 0.054
+emulator_dict['ede-v2']['default']['log10z_c'] = 3.562 # e.g. from https://github.com/mwt5345/class_ede/blob/master/class/notebooks-ede/2-CMB-Comparison.ipynb
+emulator_dict['ede-v2']['default']['thetai_scf'] = 2.83 # e.g. from https://github.com/mwt5345/class_ede/blob/master/class/notebooks-ede/2-CMB-Comparison.ipynb
+emulator_dict['ede-v2']['default']['r'] = 0.
+emulator_dict['ede-v2']['default']['N_ur'] = 0.00641
+emulator_dict['ede-v2']['default']['N_ncdm'] = 3
+emulator_dict['ede-v2']['default']['m_ncdm'] = 0.02
 
 
 cp_tt_nn = {}
@@ -150,13 +181,26 @@ with suppress_warnings():
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
+import re
+
+def split_emulator_string(input_string):
+    match = re.match(r"(.+)-v(\d+)", input_string)
+    if match:
+        folder = match.group(1)
+        version = match.group(2)
+        return folder, version
+    else:
+        folder = input_string
+        version = '1'
+        return folder, version
 
 
 
 
 for mp in cosmo_model_list:
-    
-    path_to_emulators = path_to_cosmopower_organization + '/' + mp +'/'
+    folder, version = split_emulator_string(mp)
+    # print(folder, version)
+    path_to_emulators = path_to_cosmopower_organization + '/' + folder +'/'
     
     cp_tt_nn[mp] = cosmopower_NN(restore=True,
                              restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TT'])
