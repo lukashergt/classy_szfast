@@ -10,7 +10,7 @@ import time
 class classy_sz(classy):
     use_class_sz_fast_mode = 0 # this is passed in the yaml file
     use_class_sz_no_cosmo_mode = 0 # this is passed in the yaml file
-    lensing_lkl = "SOLikeT"
+    lensing_lkl = None
     # skip_background_and_thermo = True
     # ell_factor = False # True for pyactlite and bplike, False for clik
 

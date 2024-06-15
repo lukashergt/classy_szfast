@@ -13,6 +13,26 @@ import pickle
 H_units_conv_factor = {"1/Mpc": 1, "km/s/Mpc": Const.c_km_s}
 
 
+import logging
+
+def configure_logging(level=logging.INFO):
+    logging.basicConfig(
+        format='%(levelname)s - %(message)s',
+        level=level
+    )
+
+def set_verbosity(verbosity):
+    levels = {
+        'none': logging.CRITICAL,
+        'minimal': logging.INFO,
+        'extensive': logging.DEBUG
+    }
+    # print(f'Setting verbosity to {verbosity}')
+    level = levels.get(verbosity, logging.INFO)
+    configure_logging(level)
+
+
+
 def update_params_with_defaults(params_values, self):
     """
     Update params_values with default values if they don't already exist.
@@ -38,6 +58,15 @@ class Class_szfast(object):
         # self.xy = xy
         # self.lowring = lowring
 
+
+        set_verbosity(kwargs["classy_sz_verbose"])
+        self.logger = logging.getLogger(__name__)
+        
+
+        
+
+
+
         # cosmopower emulators
         self.cp_path_to_cosmopower_organization = path_to_cosmopower_organization + '/'
         self.cp_tt_nn = cp_tt_nn
@@ -58,17 +87,34 @@ class Class_szfast(object):
             self.cp_pkl_fftlog_alphas_real_nn  = cp_pkl_fftlog_alphas_real_nn
             self.cp_pkl_fftlog_alphas_imag_nn = cp_pkl_fftlog_alphas_imag_nn
 
-        self.cosmo_model = 'lcdm'
+        self.cosmo_model = 'ede-v2'
         self.use_Amod = 0
         self.Amod = 0 
 
         self.cp_lmax = cp_l_max_scalars
         self.cp_ls = np.arange(2,self.cp_lmax+1)
 
-        self.cp_kmax = 50.
-        self.cp_kmin = 1e-4
-        self.cp_nk = 5000
-        self.cp_ndspl_k = 10
+
+        
+        cosmo_model_dict = {0: 'lcdm',
+                            1: 'mnu',
+                            2: 'neff',
+                            3: 'wcdm',
+                            4: 'ede',
+                            5: 'mnu-3states',
+                            6: 'ede-v2'
+                            }
+        
+
+        if cosmo_model_dict[kwargs['cosmo_model']] == 'ede-v2':
+
+            self.cp_ndspl_k = 1
+            self.cp_nk = 1000
+        
+        else:
+        
+            self.cp_ndspl_k = 10
+            self.cp_nk = 5000
 
         self.cp_predicted_tt_spectrum =np.zeros(self.cp_lmax)
         self.cp_predicted_te_spectrum =np.zeros(self.cp_lmax)
@@ -79,19 +125,43 @@ class Class_szfast(object):
         self.cszfast_ldim = 20000 # used for the cls arrays
 
         self.cszfast_pk_grid_nz = 100 # has to be same as narraySZ, i.e., ndim_redshifts; it is setup hereafter if ndim_redshifts is passed
-        self.cszfast_pk_grid_zmax = 5. # current max z of our pk emulators (sept 23)
+        
+
+
+        if (cosmo_model_dict[kwargs['cosmo_model']] == 'ede-v2'):
+        
+            self.cszfast_pk_grid_zmax = 20.
+            self.cszfast_pk_grid_kmin = 5e-4
+            self.cszfast_pk_grid_kmax = 10. 
+            self.cp_kmax = self.cszfast_pk_grid_kmax
+            self.cp_kmin = self.cszfast_pk_grid_kmin
+            self.logger.info(f">>> using kmin = {self.cp_kmin}")
+            self.logger.info(f">>> using kmax = {self.cp_kmax}")
+            self.logger.info(f">>> using zmax = {self.cszfast_pk_grid_zmax}")
+        
+        else:
+        
+            self.cszfast_pk_grid_zmax = 5. #  max z of our pk emulators (sept 23)
+            self.cszfast_pk_grid_kmin = 1e-4
+            self.cszfast_pk_grid_kmax = 50.
+            self.cp_kmax = self.cszfast_pk_grid_kmax
+            self.cp_kmin = self.cszfast_pk_grid_kmin
+            self.logger.info(f">>> using kmin = {self.cp_kmin}")
+            self.logger.info(f">>> using kmax = {self.cp_kmax}")
+            self.logger.info(f">>> using zmax = {self.cszfast_pk_grid_zmax}")
+
         self.cszfast_pk_grid_z = np.linspace(0.,self.cszfast_pk_grid_zmax,self.cszfast_pk_grid_nz)
         self.cszfast_pk_grid_ln1pz = np.log(1.+self.cszfast_pk_grid_z)
 
-        self.cszfast_pk_grid_kmin = 1e-4
-        self.cszfast_pk_grid_kmax = 50.
+
         self.cszfast_pk_grid_k = np.geomspace(self.cp_kmin,self.cp_kmax,self.cp_nk)[::self.cp_ndspl_k]
+        
         self.cszfast_pk_grid_lnk = np.log(self.cszfast_pk_grid_k)
+        
         self.cszfast_pk_grid_nk = len(np.geomspace(self.cp_kmin,self.cp_kmax,self.cp_nk)[::self.cp_ndspl_k]) # has to be same as ndimSZ, and the same as dimension of cosmopower pk emulators
+        
         for k,v in kwargs.items():
-            # if k == 'ndim_masses':
-            #     self.cszfast_pk_grid_nk = v
-            #     self.cszfast_pk_grid_k = np.geomspace(self.cszfast_pk_grid_kmin,self.cszfast_pk_grid_kmax,self.cszfast_pk_grid_nk)
+
             if k == 'ndim_redshifts':
                 self.cszfast_pk_grid_nz = v
                 self.cszfast_pk_grid_z = np.linspace(0.,self.cszfast_pk_grid_zmax,self.cszfast_pk_grid_nz)
@@ -100,25 +170,27 @@ class Class_szfast(object):
                 self.cszfast_pk_grid_pkl_flat = np.zeros(self.cszfast_pk_grid_nz*self.cszfast_pk_grid_nk)
 
             if k == 'cosmo_model':
-                # print('updating cosmo model')
-                cosmo_model_dict = {0: 'lcdm',
-                                    1: 'mnu',
-                                    2: 'neff',
-                                    3: 'wcdm',
-                                    4: 'ede',
-                                    5: 'mnu-3states',
-                                    6: 'ede-v2'
-                                    }
+
                 self.cosmo_model = cosmo_model_dict[v]
 
             if k == 'use_Amod':
+
                 self.use_Amod = v
                 self.Amod  = kwargs['Amod']
-                # print('self.cosmo_model',self.cosmo_model)
-        # print('self.cszfast_pk_grid_nk',self.cszfast_pk_grid_nk)
-        # print('self.cszfast_pk_grid_nz',self.cszfast_pk_grid_nz)
 
-        # exit(0)
+
+
+        if cosmo_model_dict[kwargs['cosmo_model']] == 'ede-v2':
+        
+            self.pk_power_fac = self.cszfast_pk_grid_k**-3
+        
+        else:
+
+            ls = np.arange(2,self.cp_nk+2)[::self.cp_ndspl_k] # jan 10 ndspl
+            dls = ls*(ls+1.)/2./np.pi
+            self.pk_power_fac= (dls)**-1
+
+
         self.cp_z_interp = np.linspace(0.,20.,5000)
 
         self.csz_base = None
@@ -161,12 +233,14 @@ class Class_szfast(object):
         t0 = time.time()
 
         sigma_8_asked = params_cp["sigma8"]
+        update_params_with_defaults(params_cp, self)
         # print(params_cp)
         def to_root(ln10_10_As_goal):
             params_cp["ln10^{10}A_s"] = ln10_10_As_goal[0]
             params_dict = {}
             for k,v in params_cp.items():
                 params_dict[k]=[v]
+            
             return self.cp_der_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0][1]-sigma_8_asked
 
         lnA_s = optimize.root(to_root,
@@ -322,17 +396,16 @@ class Class_szfast(object):
     def calculate_pkl(self,
                       # cosmo_model = self.cosmo_model,
                       **params_values_dict):
-        nz = self.cszfast_pk_grid_nz # number of z-points in redshift data [21oct22] --> set to 80
-        zmax = self.cszfast_pk_grid_zmax # max redshift of redshift data [21oct22] --> set to 4 because boltzmannbase.py wants to extrapolate
-        z_arr = np.linspace(0.,zmax,nz) # z-array of redshift data [21oct22] oct 26 22: nz = 1000, zmax = 20
+ 
+        z_arr = self.cszfast_pk_grid_z
 
-        nk = self.cp_nk
-        ndspl = self.cp_ndspl_k
-        k_arr = np.geomspace(self.cp_kmin,self.cp_kmax,nk)[::ndspl]  # oct 26 22 : (1e-4,50.,5000), jan 10: ndspl
+
+        k_arr = self.cszfast_pk_grid_k 
 
 
         params_values = params_values_dict.copy()
-        # print('in pkl:',params_values)
+        update_params_with_defaults(params_values, self)
+
 
         params_dict = {}
         for k,v in zip(params_values.keys(),params_values.values()):
@@ -347,55 +420,37 @@ class Class_szfast(object):
         predicted_pk_spectrum_z = []
 
         if self.use_Amod:
-            # print(">>> using Amod :",self.Amod)
+
             for zp in z_arr:
+
                 params_dict_pp = params_dict.copy()
                 params_dict_pp['z_pk_save_nonclass'] = [zp]
                 pkl_p = self.cp_pkl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0]
                 pknl_p = self.cp_pknl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0]
                 pk_ae  = pkl_p + self.Amod*(pknl_p-pkl_p)
                 predicted_pk_spectrum_z.append(pk_ae)
+
         else:
+
             for zp in z_arr:
+            
                 params_dict_pp = params_dict.copy()
                 params_dict_pp['z_pk_save_nonclass'] = [zp]
                 predicted_pk_spectrum_z.append(self.cp_pkl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0])
 
         predicted_pk_spectrum = np.asarray(predicted_pk_spectrum_z)
 
-        # weird scaling to get rid off
-        # scaling factor for the pk emulator:
-        ls = np.arange(2,self.cp_nk+2)[::ndspl] # jan 10 ndspl
-        dls = ls*(ls+1.)/2./np.pi
+
         pk = 10.**predicted_pk_spectrum
-        pk_re =  ((dls)**-1*pk)
+
+        pk_re = pk*self.pk_power_fac
         pk_re = np.transpose(pk_re)
 
-        # print(z_arr,np.log(k_arr),np.log(pk_re))
-        # print(np.log(pk_re).min())
-        # print(np.log(pk_re).max())
-        # print(np.shape(np.log(pk_re)))
-        # print('coordinates')
-        # # z_coords, k_coords = np.meshgrid(z_arr, np.log(k_arr), indexing='ij')
-        # # z_coords, k_coords = z_coords.flatten(), k_coords.flatten()
-        # z_coords, k_coords = z_arr,np.log(k_arr)
-        # print(len(z_coords),len(k_coords))
-        # #
-        # # print(np.shape(list(zip(z_arr,np.log(k_arr)))))
-        # pk_values = np.log(pk_re).T
-        # # pk_values = pk_values.ravel()
-        # print(np.shape(pk_values),pk_values)
-        #
-        # self.pkl_linearnd_interp = LinearNDInterpolator(np.asarray(z_coords),np.asarray(k_coords), pk_values)
-        # exit(0)
-        # # self.pkl_cloughtocher_interp = CloughTocher2DInterpolator(list(zip(z_arr,np.log(k_arr))), np.log(pk_re).T)
-        # exit(0)
-        # self.pkl_cloughtocher_interp = CloughTocher2DInterpolator(list(zip(z_arr,np.log(k_arr))), pk_value)
-        # is this line making things slower?
         self.pkl_interp = PowerSpectrumInterpolator(z_arr,k_arr,np.log(pk_re).T,logP=True)
-        # self.pkl_interp = None
+
         self.cszfast_pk_grid_pk = pk_re
         self.cszfast_pk_grid_pkl_flat = pk_re.flatten()
+
         return pk_re, k_arr, z_arr
 
 
@@ -450,6 +505,7 @@ class Class_szfast(object):
                          # cosmo_model = self.cosmo_model,
                          **params_values_dict):
         params_values = params_values_dict.copy()
+        update_params_with_defaults(params_values, self)
         # print('in pkl:',params_values)
 
         params_dict = {}
@@ -462,6 +518,7 @@ class Class_szfast(object):
 
         self.cp_predicted_der = self.cp_der_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
         self.sigma8 = self.cp_predicted_der[1]
+        self.Neff = self.cp_predicted_der[4]
         return 0
 
 
@@ -495,17 +552,16 @@ class Class_szfast(object):
     def calculate_pknl(self,
                       # cosmo_model = self.cosmo_model,
                       **params_values_dict):
-        nz = self.cszfast_pk_grid_nz # number of z-points in redshift data [21oct22] --> set to 80
-        zmax = self.cszfast_pk_grid_zmax # max redshift of redshift data [21oct22] --> set to 4 because boltzmannbase.py wants to extrapolate
-        z_arr = np.linspace(0.,zmax,nz) # z-array of redshift data [21oct22] oct 26 22: nz = 1000, zmax = 20
+        
+        z_arr = self.cszfast_pk_grid_z
 
-        nk = self.cp_nk
-        ndspl = self.cp_ndspl_k
-        k_arr = np.geomspace(self.cp_kmin,self.cp_kmax,nk)[::ndspl]  # oct 26 22 : (1e-4,50.,5000), jan 10: ndspl
+
+        k_arr = self.cszfast_pk_grid_k 
 
 
         params_values = params_values_dict.copy()
-        # print('in pknl:',params_values)
+        update_params_with_defaults(params_values, self)
+
 
         params_dict = {}
         for k,v in zip(params_values.keys(),params_values.values()):
@@ -525,43 +581,39 @@ class Class_szfast(object):
 
         predicted_pk_spectrum = np.asarray(predicted_pk_spectrum_z)
 
-        # weird scaling to get rid off
-        # scaling factor for the pk emulator:
-        ls = np.arange(2,self.cp_nk+2)[::ndspl] # jan 10 ndspl
-        dls = ls*(ls+1.)/2./np.pi
+
         pk = 10.**predicted_pk_spectrum
-        pk_re =  ((dls)**-1*pk)
+
+        pk_re = pk*self.pk_power_fac
         pk_re = np.transpose(pk_re)
 
-        # print(z_arr,np.log(k_arr),np.log(pk_re))
-        # exit(0)
-        # self.pknl_linearnd_interp = LinearNDInterpolator(list(zip(z_arr,np.log(k_arr))), pk_re.T)
-        # self.pknl_cloughtocher_interp = CloughTocher2DInterpolator(list(zip(z_arr,np.log(k_arr))), pk_re.T)
 
-        # is this line making things slower?
         self.pknl_interp = PowerSpectrumInterpolator(z_arr,k_arr,np.log(pk_re).T,logP=True)
-        # self.pknl_interp = None
+
+
         self.cszfast_pk_grid_pknl = pk_re
         self.cszfast_pk_grid_pknl_flat = pk_re.flatten()
+
         return pk_re, k_arr, z_arr
     
 
     def calculate_pkl_at_z(self,
                            z_asked,
                           params_values_dict=None):
-        nz = self.cszfast_pk_grid_nz # number of z-points in redshift data [21oct22] --> set to 80
-        zmax = self.cszfast_pk_grid_zmax # max redshift of redshift data [21oct22] --> set to 4 because boltzmannbase.py wants to extrapolate
-        z_arr = np.linspace(0.,zmax,nz) # z-array of redshift data [21oct22] oct 26 22: nz = 1000, zmax = 20
 
-        nk = self.cp_nk
-        ndspl = self.cp_ndspl_k
-        k_arr = np.geomspace(self.cp_kmin,self.cp_kmax,nk)[::ndspl]  # oct 26 22 : (1e-4,50.,5000), jan 10: ndspl
+        z_arr = self.cszfast_pk_grid_z
 
+        k_arr = self.cszfast_pk_grid_k 
 
         if params_values_dict:
+
             params_values = params_values_dict.copy()
+
         else:
+
             params_values = self.params_for_emulators
+
+        update_params_with_defaults(params_values, self)
 
 
         params_dict = {}
@@ -577,17 +629,64 @@ class Class_szfast(object):
 
         z_asked = z_asked
         params_dict_pp = params_dict.copy()
+        update_params_with_defaults(params_dict_pp, self)
+
         params_dict_pp['z_pk_save_nonclass'] = [z_asked]
         predicted_pk_spectrum_z.append(self.cp_pkl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0])
 
         predicted_pk_spectrum = np.asarray(predicted_pk_spectrum_z)
 
-        # weird scaling to get rid off
-        # scaling factor for the pk emulator:
-        ls = np.arange(2,self.cp_nk+2)[::ndspl] # jan 10 ndspl
-        dls = ls*(ls+1.)/2./np.pi
+
         pk = 10.**predicted_pk_spectrum
-        pk_re =  ((dls)**-1*pk)
+        pk_re = pk*self.pk_power_fac
+        pk_re = np.transpose(pk_re)
+
+        
+        return pk_re, k_arr
+    
+
+    def calculate_pknl_at_z(self,
+                           z_asked,
+                          params_values_dict=None):
+
+        z_arr = self.cszfast_pk_grid_z
+
+        k_arr = self.cszfast_pk_grid_k 
+
+        if params_values_dict:
+
+            params_values = params_values_dict.copy()
+
+        else:
+
+            params_values = self.params_for_emulators
+
+        update_params_with_defaults(params_values, self)
+
+
+        params_dict = {}
+        for k,v in zip(params_values.keys(),params_values.values()):
+            params_dict[k]=[v]
+
+        if 'm_ncdm' in params_dict.keys():
+            if isinstance(params_dict['m_ncdm'][0],str): 
+                params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
+
+
+        predicted_pk_spectrum_z = []
+
+        z_asked = z_asked
+        params_dict_pp = params_dict.copy()
+        update_params_with_defaults(params_dict_pp, self)
+
+        params_dict_pp['z_pk_save_nonclass'] = [z_asked]
+        predicted_pk_spectrum_z.append(self.cp_pknl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0])
+
+        predicted_pk_spectrum = np.asarray(predicted_pk_spectrum_z)
+
+
+        pk = 10.**predicted_pk_spectrum
+        pk_re = pk*self.pk_power_fac
         pk_re = np.transpose(pk_re)
 
         
