@@ -33,16 +33,15 @@ def set_verbosity(verbosity):
 
 
 
-def update_params_with_defaults(params_values, self):
+def update_params_with_defaults(params_values, default_values):
     """
     Update params_values with default values if they don't already exist.
 
     Args:
     params_values (dict): Dictionary containing parameter values.
-    self (object): The object containing emulator_dict and cosmo_model attributes.
+    default_values (dict): Dictionary containing default parameter values.
     """
-    # Retrieve default values
-    default_values = self.emulator_dict[self.cosmo_model]['default']
+
     
     # Update params_values with default values if key does not exist
     for key, value in default_values.items():
@@ -52,6 +51,7 @@ def update_params_with_defaults(params_values, self):
 
 class Class_szfast(object):
     def __init__(self,
+                 params_settings = {},
                 #lowring=False,  some options if needed
                  **kwargs):
         # some parameters
@@ -59,7 +59,11 @@ class Class_szfast(object):
         # self.lowring = lowring
 
 
-        set_verbosity(kwargs["classy_sz_verbose"])
+        self.A_s_fast = 0 
+        self.logA_fast = 0
+
+
+        set_verbosity(params_settings["classy_sz_verbose"])
         self.logger = logging.getLogger(__name__)
         
 
@@ -95,6 +99,7 @@ class Class_szfast(object):
         self.cp_ls = np.arange(2,self.cp_lmax+1)
 
 
+
         
         cosmo_model_dict = {0: 'lcdm',
                             1: 'mnu',
@@ -106,7 +111,7 @@ class Class_szfast(object):
                             }
         
 
-        if cosmo_model_dict[kwargs['cosmo_model']] == 'ede-v2':
+        if cosmo_model_dict[params_settings['cosmo_model']] == 'ede-v2':
 
             self.cp_ndspl_k = 1
             self.cp_nk = 1000
@@ -128,16 +133,16 @@ class Class_szfast(object):
         
 
 
-        if (cosmo_model_dict[kwargs['cosmo_model']] == 'ede-v2'):
+        if (cosmo_model_dict[params_settings['cosmo_model']] == 'ede-v2'):
         
             self.cszfast_pk_grid_zmax = 20.
             self.cszfast_pk_grid_kmin = 5e-4
             self.cszfast_pk_grid_kmax = 10. 
             self.cp_kmax = self.cszfast_pk_grid_kmax
             self.cp_kmin = self.cszfast_pk_grid_kmin
-            self.logger.info(f">>> using kmin = {self.cp_kmin}")
-            self.logger.info(f">>> using kmax = {self.cp_kmax}")
-            self.logger.info(f">>> using zmax = {self.cszfast_pk_grid_zmax}")
+            # self.logger.info(f">>> using kmin = {self.cp_kmin}")
+            # self.logger.info(f">>> using kmax = {self.cp_kmax}")
+            # self.logger.info(f">>> using zmax = {self.cszfast_pk_grid_zmax}")
         
         else:
         
@@ -146,9 +151,9 @@ class Class_szfast(object):
             self.cszfast_pk_grid_kmax = 50.
             self.cp_kmax = self.cszfast_pk_grid_kmax
             self.cp_kmin = self.cszfast_pk_grid_kmin
-            self.logger.info(f">>> using kmin = {self.cp_kmin}")
-            self.logger.info(f">>> using kmax = {self.cp_kmax}")
-            self.logger.info(f">>> using zmax = {self.cszfast_pk_grid_zmax}")
+            # self.logger.info(f">>> using kmin = {self.cp_kmin}")
+            # self.logger.info(f">>> using kmax = {self.cp_kmax}")
+            # self.logger.info(f">>> using zmax = {self.cszfast_pk_grid_zmax}")
 
         self.cszfast_pk_grid_z = np.linspace(0.,self.cszfast_pk_grid_zmax,self.cszfast_pk_grid_nz)
         self.cszfast_pk_grid_ln1pz = np.log(1.+self.cszfast_pk_grid_z)
@@ -160,12 +165,14 @@ class Class_szfast(object):
         
         self.cszfast_pk_grid_nk = len(np.geomspace(self.cp_kmin,self.cp_kmax,self.cp_nk)[::self.cp_ndspl_k]) # has to be same as ndimSZ, and the same as dimension of cosmopower pk emulators
         
-        for k,v in kwargs.items():
+        for k,v in params_settings.items():
 
             if k == 'ndim_redshifts':
+                
                 self.cszfast_pk_grid_nz = v
                 self.cszfast_pk_grid_z = np.linspace(0.,self.cszfast_pk_grid_zmax,self.cszfast_pk_grid_nz)
                 self.cszfast_pk_grid_ln1pz = np.log(1.+self.cszfast_pk_grid_z)
+
                 self.cszfast_pk_grid_pknl_flat = np.zeros(self.cszfast_pk_grid_nz*self.cszfast_pk_grid_nk)
                 self.cszfast_pk_grid_pkl_flat = np.zeros(self.cszfast_pk_grid_nz*self.cszfast_pk_grid_nk)
 
@@ -176,11 +183,11 @@ class Class_szfast(object):
             if k == 'use_Amod':
 
                 self.use_Amod = v
-                self.Amod  = kwargs['Amod']
+                self.Amod  = params_settings['Amod']
 
 
 
-        if cosmo_model_dict[kwargs['cosmo_model']] == 'ede-v2':
+        if cosmo_model_dict[params_settings['cosmo_model']] == 'ede-v2':
         
             self.pk_power_fac = self.cszfast_pk_grid_k**-3
         
@@ -194,14 +201,6 @@ class Class_szfast(object):
         self.cp_z_interp = np.linspace(0.,20.,5000)
 
         self.csz_base = None
-        # self.csz_base.compute()
-
-
-        # z_arr = np.linspace(0.,zmax,nz) # z-array of redshift data [21oct22] oct 26 22: nz = 1000, zmax = 20
-        #
-        # nk = self.cp_nk
-        # ndspl = self.cp_ndspl_k
-        # k_arr = np.geomspace(self.cp_kmin,self.cp_kmax,nk)[::ndspl]  # oct 26 22 : (1e-4,50.,5000), jan 10: ndspl
 
 
         self.cszfast_zgrid_zmin = 0.
@@ -225,16 +224,15 @@ class Class_szfast(object):
         self.cszfast_gas_pressure_xgrid = np.geomspace(self.cszfast_gas_pressure_xgrid_xmin,
                                                        self.cszfast_gas_pressure_xgrid_xmax,
                                                        self.cszfast_gas_pressure_xgrid_nx)
-
+        
         self.params_for_emulators = {}
 
     def find_As(self,params_cp):
-        # params_cp = self.params_cp
-        t0 = time.time()
 
         sigma_8_asked = params_cp["sigma8"]
-        update_params_with_defaults(params_cp, self)
-        # print(params_cp)
+
+        update_params_with_defaults(params_cp, self.emulator_dict[self.cosmo_model]['default'])
+
         def to_root(ln10_10_As_goal):
             params_cp["ln10^{10}A_s"] = ln10_10_As_goal[0]
             params_dict = {}
@@ -247,14 +245,18 @@ class Class_szfast(object):
                               x0=3.046,
                               #tol = 1e-10,
                               method="hybr")
-        params_cp['ln10^{10}A_s'] = lnA_s.x[0]# .x[0]
+        
+        params_cp['ln10^{10}A_s'] = lnA_s.x[0]
+
         params_cp.pop('sigma8')
-        # print("T total in find As",time.time()-t0)#self.t_total)
-        # print(params_cp)
+
         return 1
 
 
     def get_H0_from_thetas(self,params_values):
+
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
+
         # print(params_values)
         theta_s_asked = params_values['100*theta_s']
         def fzero(H0_goal):
@@ -262,7 +264,7 @@ class Class_szfast(object):
           params_dict = {}
           for k,v in params_values.items():
               params_dict[k]=[v]
-          # print(params_dict)
+
           predicted_der_params = self.cp_der_nn[self.cosmo_model].ten_to_predictions_np(params_dict)
           return predicted_der_params[0][0]-theta_s_asked
         sol = optimize.root(fzero,
@@ -319,9 +321,10 @@ class Class_szfast(object):
                       want_pp=1,
                       **params_values_dict):
         
-        params_values = params_values_dict.copy()
-        update_params_with_defaults(params_values, self)
 
+        params_values = params_values_dict.copy()
+
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
 
         params_dict = {}
 
@@ -404,7 +407,7 @@ class Class_szfast(object):
 
 
         params_values = params_values_dict.copy()
-        update_params_with_defaults(params_values, self)
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
 
 
         params_dict = {}
@@ -455,57 +458,50 @@ class Class_szfast(object):
 
 
     def calculate_sigma(self,
-                        # cosmo_model = self.cosmo_model,
-                        # z_asked = None,
-                        # r_asked = None,
+                        
                         **params_values_dict):
+
         params_values = params_values_dict.copy()
+
         k = self.cszfast_pk_grid_k
-        # self.cszfast_pk_grid_z
-        # print(self.cszfast_pk_grid_pk,np.shape(self.cszfast_pk_grid_pk))
+
         P = self.cszfast_pk_grid_pk
+
         var = P.copy()
+
         dvar = P.copy()
+
         for iz,zp in enumerate(self.cszfast_pk_grid_z):
+
             R, var[:,iz] = TophatVar(k, lowring=True)(P[:,iz], extrap=True)
-            # dvar[:,iz] = np.gradient(var[:,iz], np.log(R))
-            # if params_values_dict['sigma_derivative'] == 1: ## need more points here !!
-            #     rds,dvar[:,iz] =  TophatVar(k,lowring=True,deriv=1)(P[:,iz]*k,extrap=True)
-            # else:
-            #     dvar[:,iz] = np.gradient(var[:,iz], R)
 
             dvar[:,iz] = np.gradient(var[:,iz], R)
-            # from inigo: R_vec,self.dvar = TophatVar(k,lowring=True,deriv=1)(P[:,iz]*k,extrap=True)
-            # from inigo: self.dsigma_vec = self.dvar/(2.*self.sigma_vec)
-            # print('R:',R,np.shape(R))
-            # varR = CubicSpline(R, var[:,iz])
-            # print(zp,np.sqrt(varR(8)))
-        # print(params_values)
-        # print('in sigma:',params_values)
-        # h = params_values['H0']/100.
-        # var = var.T
-        # dvar = dvar.T
+
+        # print(k)
+        # print(R)
+        # print(k*R)
+        # exit(0)
+ 
 
         self.cszfast_pk_grid_lnr = np.log(R)
         self.cszfast_pk_grid_sigma2 = var
+ 
         self.cszfast_pk_grid_sigma2_flat = var.flatten()
         self.cszfast_pk_grid_lnsigma2_flat = 0.5*np.log(var.flatten())
-        # self.cszfast_pk_grid_lnsigma2_flat = self.cszfast_pk_grid_lnsigma2_flat.T
+ 
         self.cszfast_pk_grid_dsigma2 = dvar
         self.cszfast_pk_grid_dsigma2_flat = dvar.flatten()
-        # if z_asked != None and r_asked != None:
-        #     print(z_asked[0],r_asked[0])
-        #     return z_asked, r_asked
-        # else:
-        #     return 0
+ 
         return 0
 
 
     def calculate_sigma8_and_der(self,
                          # cosmo_model = self.cosmo_model,
                          **params_values_dict):
+        
         params_values = params_values_dict.copy()
-        update_params_with_defaults(params_values, self)
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
+        
         # print('in pkl:',params_values)
 
         params_dict = {}
@@ -560,7 +556,7 @@ class Class_szfast(object):
 
 
         params_values = params_values_dict.copy()
-        update_params_with_defaults(params_values, self)
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
 
 
         params_dict = {}
@@ -613,7 +609,7 @@ class Class_szfast(object):
 
             params_values = self.params_for_emulators
 
-        update_params_with_defaults(params_values, self)
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
 
 
         params_dict = {}
@@ -629,7 +625,7 @@ class Class_szfast(object):
 
         z_asked = z_asked
         params_dict_pp = params_dict.copy()
-        update_params_with_defaults(params_dict_pp, self)
+        update_params_with_defaults(params_dict_pp, self.emulator_dict[self.cosmo_model]['default'])
 
         params_dict_pp['z_pk_save_nonclass'] = [z_asked]
         predicted_pk_spectrum_z.append(self.cp_pkl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0])
@@ -661,7 +657,7 @@ class Class_szfast(object):
 
             params_values = self.params_for_emulators
 
-        update_params_with_defaults(params_values, self)
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
 
 
         params_dict = {}
@@ -677,7 +673,7 @@ class Class_szfast(object):
 
         z_asked = z_asked
         params_dict_pp = params_dict.copy()
-        update_params_with_defaults(params_dict_pp, self)
+        update_params_with_defaults(params_dict_pp, self.emulator_dict[self.cosmo_model]['default'])
 
         params_dict_pp['z_pk_save_nonclass'] = [z_asked]
         predicted_pk_spectrum_z.append(self.cp_pknl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0])
@@ -763,6 +759,7 @@ class Class_szfast(object):
                                                     assume_sorted=False)
 
     def get_cmb_cls(self,ell_factor=True,Tcmb_uk = Tcmb_uk):
+
         cls = {}
         cls['ell'] = np.arange(self.cszfast_ldim)
         cls['tt'] = np.zeros(self.cszfast_ldim)
@@ -774,13 +771,6 @@ class Class_szfast(object):
         cls['te'][2:self.cp_lmax+1] = (Tcmb_uk)**2.*self.cp_predicted_te_spectrum.copy()
         cls['ee'][2:self.cp_lmax+1] = (Tcmb_uk)**2.*self.cp_predicted_ee_spectrum.copy()
         cls['pp'][2:self.cp_lmax+1] = self.cp_predicted_pp_spectrum.copy()/4. ## this is clkk... works for so lensinglite lkl
-        # cls['bb'][2:self.cp_lmax+1] = self.cp_predicted_pp_spectrum.copy()/4. ## this is clkk... works for so lensinglite lkl
-        # print('doing gets')
-        # For planck likelihood:
-        # lcp = np.asarray(cls['ell'][2:nl+2])
-        # cls['pp'][2:nl+2] = self.pp_spectra[0].copy()/(lcp*(lcp+1.))**2.
-        # cls['pp'][2:nl+2] *= (lcp*(lcp+1.))**2./2./np.pi
-
 
 
         if ell_factor==False:

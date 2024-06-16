@@ -60,7 +60,9 @@ emulator_dict['lcdm']['HZ'] = 'HZ_v1'
 emulator_dict['lcdm']['S8Z'] = 'S8Z_v1'
 emulator_dict['lcdm']['default'] = {}
 emulator_dict['lcdm']['default']['tau_reio'] = 0.054
-
+emulator_dict['lcdm']['default']['N_ur'] = 2.0328
+emulator_dict['lcdm']['default']['N_ncdm'] = 1
+emulator_dict['lcdm']['default']['m_ncdm'] = 0.06
 
 emulator_dict['mnu']['TT'] = 'TT_mnu_v1'
 emulator_dict['mnu']['TE'] = 'TE_mnu_v1'
@@ -74,7 +76,9 @@ emulator_dict['mnu']['HZ'] = 'HZ_mnu_v1'
 emulator_dict['mnu']['S8Z'] = 'S8Z_mnu_v1'
 emulator_dict['mnu']['default'] = {}
 emulator_dict['mnu']['default']['tau_reio'] = 0.054
-
+emulator_dict['mnu']['default']['N_ur'] = 2.0328
+emulator_dict['mnu']['default']['N_ncdm'] = 1
+emulator_dict['mnu']['default']['m_ncdm'] = 0.06
 
 emulator_dict['neff']['TT'] = 'TT_neff_v1'
 emulator_dict['neff']['TE'] = 'TE_neff_v1'
@@ -88,7 +92,9 @@ emulator_dict['neff']['HZ'] = 'HZ_neff_v1'
 emulator_dict['neff']['S8Z'] = 'S8Z_neff_v1'
 emulator_dict['neff']['default'] = {}
 emulator_dict['neff']['default']['tau_reio'] = 0.054
-
+emulator_dict['neff']['default']['N_ur'] = 2.0328
+emulator_dict['neff']['default']['N_ncdm'] = 1
+emulator_dict['neff']['default']['m_ncdm'] = 0.06
 
 
 emulator_dict['wcdm']['TT'] = 'TT_w_v1'
@@ -103,7 +109,9 @@ emulator_dict['wcdm']['HZ'] = 'HZ_w_v1'
 emulator_dict['wcdm']['S8Z'] = 'S8Z_w_v1'
 emulator_dict['wcdm']['default'] = {}
 emulator_dict['wcdm']['default']['tau_reio'] = 0.054
-
+emulator_dict['wcdm']['default']['N_ur'] = 2.0328
+emulator_dict['wcdm']['default']['N_ncdm'] = 1
+emulator_dict['wcdm']['default']['m_ncdm'] = 0.06
 
 emulator_dict['ede']['TT'] = 'TT_v1'
 emulator_dict['ede']['TE'] = 'TE_v1'
@@ -124,8 +132,6 @@ emulator_dict['ede']['default']['r'] = 0.
 emulator_dict['ede']['default']['N_ur'] = 0.00641
 emulator_dict['ede']['default']['N_ncdm'] = 3
 emulator_dict['ede']['default']['m_ncdm'] = 0.02
-emulator_dict['ede']['default'] = {}
-emulator_dict['ede']['default']['tau_reio'] = 0.054
 
 
 emulator_dict['mnu-3states']['TT'] = 'TT_v1'
@@ -140,7 +146,9 @@ emulator_dict['mnu-3states']['HZ'] = 'HZ_v1'
 emulator_dict['mnu-3states']['S8Z'] = 'S8Z_v1'
 emulator_dict['mnu-3states']['default'] = {}
 emulator_dict['mnu-3states']['default']['tau_reio'] = 0.054
-
+emulator_dict['mnu-3states']['default']['N_ur'] = 0.00641
+emulator_dict['mnu-3states']['default']['N_ncdm'] = 3
+emulator_dict['mnu-3states']['default']['m_ncdm'] = 0.02
 
 emulator_dict['ede-v2']['TT'] = 'TT_v2'
 emulator_dict['ede-v2']['TE'] = 'TE_v2'

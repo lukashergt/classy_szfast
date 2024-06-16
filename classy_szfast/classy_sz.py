@@ -8,9 +8,9 @@ import numpy as np
 import time
 
 class classy_sz(classy):
-    use_class_sz_fast_mode = 0 # this is passed in the yaml file
+    use_class_sz_fast_mode = 1 # this is passed in the yaml file
     use_class_sz_no_cosmo_mode = 0 # this is passed in the yaml file
-    lensing_lkl = None
+    lensing_lkl = 'ACT'
     # skip_background_and_thermo = True
     # ell_factor = False # True for pyactlite and bplike, False for clik
 
@@ -35,27 +35,13 @@ class classy_sz(classy):
 
         if self.use_class_sz_no_cosmo_mode == 1:
             self.log.info("Initializing cosmology part!")
+
             initial_parameters = self.extra_args.copy()
-            # print("initial_parameters:",initial_parameters)
+
 
             self.classy.set(initial_parameters)
             self.classy.compute_class_szfast()
             self.log.info("cosmology part initialized!")
-
-
-        # print(self.lensing_lkl)
-        # exit(0)
-
-        # # class_sz default params for lkl
-        # self.extra_args["output"] = 'tSZ_1h'
-        # self.extra_args["multipoles_sz"] = 'P15'
-        # self.extra_args['nlSZ'] = 18
-
-
-    # # here modify if you want to bypass stuff in the class computation
-    # def calculate(self, state, want_derived=True, **params_values_dict):
-    #     print("Bypassing class_sz")
-
 
 
 
@@ -248,23 +234,22 @@ class classy_sz(classy):
 
     # get the required new observable
     def get_Cl(self, ell_factor=False, units="FIRASmuK2"):
+        
         if self.use_class_sz_fast_mode:
+
             return self.get_Clfast(ell_factor=ell_factor)
+        
         else:
+        
             return self._get_Cl(ell_factor=ell_factor, units=units, lensed=True)
 
     def get_Clfast(self,ell_factor = False):
-        # print('ell_factor:',self.ell_factor)
-        # exit(0)
+
         cls = {}
         cls = deepcopy(self._current_state["Cl"])
-        # ell_factor = self.ell_factor
-        # print(cls)
-        # exit(0)
-        # print('in get clfast:',ell_factor)
-        # print(cls)
+
         lcp = np.asarray(cls['ell'])
-        # print(self.lensing_lkl)
+
         if ell_factor==True:
             cls['tt'] *= (2.7255e6)**2.*(lcp*(lcp+1.))/2./np.pi
             cls['te'] *= (2.7255e6)**2.*(lcp*(lcp+1.))/2./np.pi
@@ -274,17 +259,18 @@ class classy_sz(classy):
             cls['tt'] *= (2.7255e6)**2.
             cls['te'] *= (2.7255e6)**2.
             cls['ee'] *= (2.7255e6)**2.
-        # print(cls['tt'][1230])
-        # print(cls['te'][1230])
-        # print(cls['ee'][1230])
-        # exit(0)
+
         if self.lensing_lkl ==  "SOLikeT":
             cls['pp'] *= (lcp*(lcp+1.))**2./4.
+
         elif self.lensing_lkl == "ACT":
-            cls['pp'] *= 1.#(lcp*(lcp+1.))**2./4.
+            cls['pp'] *= 1.
+             
         else: # here for the planck lensing lkl, using lfactor option gives:
             cls['pp'] *= (lcp*(lcp+1.))**2.*1./2./np.pi
+
         return cls
+    
     # get the required new observable
     def get_Cl_sz(self):
         cls = {}
@@ -362,8 +348,9 @@ class classy_sz(classy):
 
     # get the required new observable
     def get_sz_unbinned_cluster_counts(self):
+
         cls = deepcopy(self._current_state["sz_unbinned_cluster_counts"])
-        # print(cls)
+
         return cls['loglike'],cls['ntot'],cls['rates']
 
 
@@ -380,37 +367,48 @@ class classy_sz(classy):
 
     # IMPORTANT: this method is imported from cobaya and modified to accomodate the emulators
     def calculate(self, state, want_derived=True, **params_values_dict):
-        # Set parameters
+
         params_values = params_values_dict.copy()
-        # print('\n\n')
-        # print('>>> class_sz.py: class/class_sz using params:',params_values)
+
         if 'N_ncdm' in self.extra_args.keys():
+
             if self.extra_args['N_ncdm'] ==  3:
+            
                 str_mncdm = str(params_values['m_ncdm'])
                 params_values['m_ncdm'] = str_mncdm+','+str_mncdm+','+str_mncdm
-        # print('>>> class_sz.py: class/class_sz using params:',params_values)
-        # exit(0)
+
         try:
+            
             params_values['ln10^{10}A_s'] = params_values.pop("logA")
+            
             self.set(params_values)
+        
         except KeyError:
+        
             self.set(params_values)
+        
         # Compute!
         try:
             if self.use_class_sz_fast_mode == 1:
-                # start = time.perf_counter()
+
                 if self.use_class_sz_no_cosmo_mode == 1:
-                    # print(params_values)
+
+                    start_time = time.time()
                     self.classy.compute_class_sz(params_values)
+                    end_time = time.time()
+                    # self.log.info("Execution time of class_sz: {:.5f} seconds".format(end_time - start_time))
+
                 else:
+
+                    start_time = time.time()
                     self.classy.compute_class_szfast()
-                # end = time.perf_counter()
-                # print('classy_szfast took:',end-start)
-            # self.classy.compute_class_szfast()
-            # elif self.use_class_sz_no_cosmo_mode == 1:
-            #     self.classy.compute_class_sz(params_values)
+                    end_time = time.time()
+                    # self.log.info("Execution time of class_szfast: {:.5f} seconds".format(end_time - start_time))
+                    # print('pars in classy',self.classy.pars)
             else:
+
                 self.classy.compute()
+
         # "Valid" failure of CLASS: parameters too extreme -> log and report
         except self.classy_module.CosmoComputationError as e:
             if self.stop_at_error:
@@ -492,82 +490,34 @@ class classy_sz(classy):
             if collector.post:
                 state[product] = collector.post(*state[product])
         # Prepare derived parameters
+
         d, d_extra = self._get_derived_all(derived_requested=want_derived)
+
         if want_derived:
             state["derived"] = {p: d.get(p) for p in self.output_params}
-            # Prepare necessary extra derived parameters
+
         state["derived_extra"] = deepcopy(d_extra)
-        # exit(0)
 
 
-    # # get the required new observable
-    # def get_Cl(self,ell_factor=True,units="FIRASmuK2"):
-    #     ell_factor=self.ell_factor
-    #     # if self.tsz.use_class_sz_fast_mode == 1:
-    #     cls = {}
-    #     cls['ell'] = np.arange(20000)
-    #     # print(cls['ell'])
-    #     cls['tt'] = np.zeros(20000)
-    #     cls['te'] = np.zeros(20000)
-    #     cls['ee'] = np.zeros(20000)
-    #     cls['pp'] = np.zeros(20000)
-    #     # if self.tt_spectra is not None:
-    #     nl = len(self.classy.class_szfast.cp_predicted_tt_spectrum)
-    #     # print('nl:',nl)
-    #     cls['tt'][2:nl+2] = (2.7255e6)**2.*self.classy.class_szfast.cp_predicted_tt_spectrum
-    #     if ell_factor==False:
-    #         lcp = np.asarray(cls['ell'][2:nl+2])
-    #         cls['tt'][2:nl+2] *= 1./(lcp*(lcp+1.)/2./np.pi)
-    #
-    # # if self.te_spectra is not None:
-    #     cls['te'][2:nl+2] = (2.7255e6)**2.*self.classy.class_szfast.cp_predicted_te_spectrum
-    #     if ell_factor==False:
-    #         lcp = np.asarray(cls['ell'][2:nl+2])
-    #         cls['te'][2:nl+2] *= 1./(lcp*(lcp+1.)/2./np.pi)
-    # # if self.ee_spectra is not None:
-    #     cls['ee'][2:nl+2] = (2.7255e6)**2.*self.classy.class_szfast.cp_predicted_ee_spectrum
-    #     if ell_factor==False:
-    #         lcp = np.asarray(cls['ell'][2:nl+2])
-    #         cls['ee'][2:nl+2] *= 1./(lcp*(lcp+1.)/2./np.pi)
-    #     # if self.pp_spectra is not None:
-    #         # nl = len(self.pp_spectra[0])
-    #     if self.lensing_lkl ==  "SOLikeT":
-    #         cls['pp'][2:nl+2] = self.classy.class_szfast.cp_predicted_pp_spectrum/4. ## this is clkk... works for so lensinglite lkl
-    #     else:
-    #         # here for the planck lensing lkl, using lfactor option gives:
-    #         lcp = np.asarray(cls['ell'][2:nl+2])
-    #         cls['pp'][2:nl+2] = self.classy.class_szfast.cp_predicted_pp_spectrum/(lcp*(lcp+1.))**2.
-    #         cls['pp'][2:nl+2] *= (lcp*(lcp+1.))**2./2./np.pi
-    #     return cls
-
-    # def check_ranges(self, z, k):
-    #     return 1
 
     # IMPORTANT: copied from cobaya and changed.
     def get_param(self, p):
+        
         translated = self.translate_param(p)
+
         for pool in ["params", "derived", "derived_extra"]:
+            
             value = (self.current_state[pool] or {}).get(translated, None)
+
             if p == 'omegam':
-                print('getting omegam in get_param')
-                # print(translated)
-                # print(self.classy.Omega_m())
-                # exit(0)
+
                 return self.classy.Omega_m()
+            
             if value is not None:
+            
                 return value
 
         raise LoggedError(self.log, "Parameter not known: '%s'", p)
-### ORIGINAL FUNCTION:
-#    def get_param(self, p):
-#        translated = self.translate_param(p)
-#        for pool in ["params", "derived", "derived_extra"]:
-#            value = (self.current_state[pool] or {}).get(translated, None)
-#            if value is not None:
-#                return value
-#
-#        raise LoggedError(self.log, "Parameter not known: '%s'", p)
-
 
 
     @classmethod
