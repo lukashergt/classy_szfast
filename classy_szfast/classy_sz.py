@@ -8,44 +8,68 @@ import numpy as np
 import time
 
 class classy_sz(classy):
+
     use_class_sz_fast_mode = 1 # this is passed in the yaml file
     use_class_sz_no_cosmo_mode = 0 # this is passed in the yaml file
     lensing_lkl = 'ACT'
-    # skip_background_and_thermo = True
-    # ell_factor = False # True for pyactlite and bplike, False for clik
+
+    baos = None 
 
     def initialize(self):
         """Importing CLASS from the correct path, if given, and if not, globally."""
+
         self.classy_module = self.is_installed()
         if not self.classy_module:
             raise NotInstalledError(
                 self.log, "Could not find CLASS_SZ. Check error message above.")
+        
         from classy_sz import Class, CosmoSevereError, CosmoComputationError
+        
         global CosmoComputationError, CosmoSevereError
+
         self.classy = Class()
         super(classy,self).initialize()
+
+
         # Add general CLASS stuff
         self.extra_args["output"] = self.extra_args.get("output", "")
+
         if "sBBN file" in self.extra_args:
             self.extra_args["sBBN file"] = (
                 self.extra_args["sBBN file"].format(classy=self.path))
+            
         # Derived parameters that may not have been requested, but will be necessary later
         self.derived_extra = []
         self.log.info("Initialized!")
 
+
+        ## rename some parameters to avoid conflices
+        classy_sz_renames = {
+
+            'omega_m':'Omega_m',
+            'Omegam':'Omega_m',
+            'Omega_m':'Omega_m'
+        }
+        self.renames.update(classy_sz_renames)
+
+
         if self.use_class_sz_no_cosmo_mode == 1:
+
             self.log.info("Initializing cosmology part!")
 
             initial_parameters = self.extra_args.copy()
 
 
             self.classy.set(initial_parameters)
-            self.classy.compute_class_szfast()
+            self.classy.compute_class_szfast(likelihood_mode=True)
             self.log.info("cosmology part initialized!")
 
 
 
+
     def must_provide(self, **requirements):
+
+
 
         if "Cl_sz" in requirements:
             # make sure cobaya still runs as it does for standard classy
@@ -232,6 +256,7 @@ class classy_sz(classy):
                         args=[])
         super().must_provide(**requirements)
 
+
     # get the required new observable
     def get_Cl(self, ell_factor=False, units="FIRASmuK2"):
         
@@ -368,7 +393,11 @@ class classy_sz(classy):
     # IMPORTANT: this method is imported from cobaya and modified to accomodate the emulators
     def calculate(self, state, want_derived=True, **params_values_dict):
 
+        
         params_values = params_values_dict.copy()
+        # if baos are requested we need to update the relevant flags
+        if self.baos:
+            params_values.update({'skip_chi':0,'skip_hubble':0})
 
         if 'N_ncdm' in self.extra_args.keys():
 
@@ -386,10 +415,11 @@ class classy_sz(classy):
         except KeyError:
         
             self.set(params_values)
-        
+
         # Compute!
         try:
             if self.use_class_sz_fast_mode == 1:
+
 
                 if self.use_class_sz_no_cosmo_mode == 1:
 
@@ -401,7 +431,7 @@ class classy_sz(classy):
                 else:
 
                     start_time = time.time()
-                    self.classy.compute_class_szfast()
+                    self.classy.compute_class_szfast(likelihood_mode=True)
                     end_time = time.time()
                     # self.log.info("Execution time of class_szfast: {:.5f} seconds".format(end_time - start_time))
                     # print('pars in classy',self.classy.pars)
@@ -494,30 +524,12 @@ class classy_sz(classy):
         d, d_extra = self._get_derived_all(derived_requested=want_derived)
 
         if want_derived:
+
             state["derived"] = {p: d.get(p) for p in self.output_params}
+
 
         state["derived_extra"] = deepcopy(d_extra)
 
-
-
-    # IMPORTANT: copied from cobaya and changed.
-    def get_param(self, p):
-        
-        translated = self.translate_param(p)
-
-        for pool in ["params", "derived", "derived_extra"]:
-            
-            value = (self.current_state[pool] or {}).get(translated, None)
-
-            if p == 'omegam':
-
-                return self.classy.Omega_m()
-            
-            if value is not None:
-            
-                return value
-
-        raise LoggedError(self.log, "Parameter not known: '%s'", p)
 
 
     @classmethod

@@ -690,9 +690,11 @@ class Class_szfast(object):
     
 
     def calculate_hubble(self,
-                                 # cosmo_model = self.cosmo_model,
-                                 **params_values_dict):
+                         **params_values_dict):
+        
         params_values = params_values_dict.copy()
+
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
 
         params_dict = {}
         for k,v in zip(params_values.keys(),params_values.values()):
@@ -702,11 +704,8 @@ class Class_szfast(object):
             if isinstance(params_dict['m_ncdm'][0],str): 
                 params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
 
-
-
         self.cp_predicted_hubble = self.cp_h_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
-        # print(self.cp_predicted_hubble)
-        # z_interp =
+ 
         self.hz_interp = scipy.interpolate.interp1d(
                                             self.cp_z_interp,
                                             self.cp_predicted_hubble,
@@ -718,36 +717,33 @@ class Class_szfast(object):
                                             assume_sorted=False)
 
     def calculate_chi(self,
-                      # cosmo_model = self.cosmo_model,
                       **params_values_dict):
-        # def test_integrand_func(x, alpha, beta, i, j, k, l):
-        #     return x * alpha * beta + i * j * k
-        #
-        #
-        # grid = np.random.random((5000, 2))
-        #
-        # res, err = pyquad.quad_grid(test_integrand_func, 0, 1, grid, (1.0, 1.0, 1.0, 1.0))
-        #
-        # print(res,err)
-        # def integrand_chi(z,alpha, beta, i, j, k, l):
-        #     z = z-1.
-        #     return 1./self.get_Hubble(z)
-        # zmax = 1.
-        # grid = np.random.random((10000000, 2))
-        # chiz,err = pyquad.quad_grid(integrand_chi, 1., 1.+zmax, grid, (1.0, 1.0, 1.0, 1.0))
-        # print(chiz)
+
         params_values = params_values_dict.copy()
 
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
+
         params_dict = {}
+
         for k,v in zip(params_values.keys(),params_values.values()):
+        
             params_dict[k]=[v]
 
         if 'm_ncdm' in params_dict.keys():
             if isinstance(params_dict['m_ncdm'][0],str): 
                 params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
 
+        # deal with different scaling of DA in different model from emulator training
+        if self.cosmo_model == 'ede-v2':
 
-        self.cp_predicted_da  = self.cp_da_nn[self.cosmo_model].predictions_np(params_dict)[0]
+            self.cp_predicted_da  = self.cp_da_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
+            self.cp_predicted_da = np.insert(self.cp_predicted_da, 0, 0)
+        
+        else:
+        
+            self.cp_predicted_da  = self.cp_da_nn[self.cosmo_model].predictions_np(params_dict)[0]
+        
+
         self.chi_interp = scipy.interpolate.interp1d(
                                                     self.cp_z_interp,
                                                     self.cp_predicted_da*(1.+self.cp_z_interp),
