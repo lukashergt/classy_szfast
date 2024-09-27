@@ -503,7 +503,6 @@ class Class_szfast(object):
         params_values = params_values_dict.copy()
         update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
         
-        # print('in pkl:',params_values)
 
         params_dict = {}
         for k,v in zip(params_values.keys(),params_values.values()):
@@ -523,7 +522,8 @@ class Class_szfast(object):
                              # cosmo_model = self.cosmo_model,
                              **params_values_dict):
         params_values = params_values_dict.copy()
-        # print('in pkl:',params_values)
+        update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
+
 
         params_dict = {}
         for k,v in zip(params_values.keys(),params_values.values()):
