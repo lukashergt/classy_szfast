@@ -87,27 +87,62 @@ class Restore_NN(tf.keras.Model):
             print(multiline_str)
 
 
-    # restore attributes
-    def restore(self, 
-                filename
-                ):
+
+    # from https://github.com/HTJense/cosmopower/blob/packaging-paper/cosmopower/cosmopower_NN.py
+    def restore(self, filename: str, allow_pickle: bool = False) -> None:
         r"""
-        Load pre-trained model
+        Load pre-trained model.
+        The default file format is compressed numpy files (.npz). The
+        Module will attempt to use this as a file extension and restore
+        from there (i.e. look for `filename.npz`). If this file does
+        not exist, and `allow_pickle` is set to True, then the file
+        `filename.pkl` will be attempted to be read by `restore_pickle`.
+
+        The function will trim the file extension from `filename`, so
+        `restore("filename")` and `restore("filename.npz")` are identical.
 
         Parameters:
-            filename (str):
-                filename tag (without suffix) where model was saved
+        :param filename: filename (without suffix) where model was saved.
+        :param allow_pickle: whether or not to permit passing this filename
+                             to the `restore_pickle` function.
         """
-        # load attributes
-        with open(filename + ".pkl", 'rb') as f:
-            self.W_, self.b_, self.alphas_, self.betas_, \
-            self.parameters_mean_, self.parameters_std_, \
-            self.features_mean_, self.features_std_, \
-            self.n_parameters, self.parameters, \
-            self.n_modes, self.modes, \
-            self.n_hidden, self.n_layers, self.architecture = pickle.load(f)
+        # Check if npz file exists.
+        filename_npz = filename + ".npz"
+        if not os.path.exists(filename_npz):
+            # Can we load this file as a pickle file?
+            filename_pkl = filename + ".pkl"
+            if allow_pickle and os.path.exists(filename_pkl):
+                self.restore_pickle(filename_pkl)
+                return
 
+            raise IOError(f"Failed to restore network from {filename}: "
+                          + (" is a pickle file, try setting 'allow_pickle = \
+                              True'" if os.path.exists(filename_pkl) else
+                             " does not exist."))
 
+        with open(filename_npz, "rb") as fp:
+            fpz = np.load(fp)
+
+            self.architecture = fpz["architecture"]
+            self.n_layers = fpz["n_layers"]
+            self.n_hidden = fpz["n_hidden"]
+            self.n_parameters = fpz["n_parameters"]
+            self.n_modes = fpz["n_modes"]
+
+            self.parameters = list(fpz["parameters"])
+            self.modes = fpz["modes"]
+
+            self.parameters_mean_ = fpz["parameters_mean"]
+            self.parameters_std_ = fpz["parameters_std"]
+            self.features_mean_ = fpz["features_mean"]
+            self.features_std_ = fpz["features_std"]
+
+            self.W_ = [fpz[f"W_{i}"] for i in range(self.n_layers)]
+            self.b_ = [fpz[f"b_{i}"] for i in range(self.n_layers)]
+            self.alphas_ = [
+                fpz[f"alphas_{i}"] for i in range(self.n_layers - 1)
+            ]
+            self.betas_ = [fpz[f"betas_{i}"] for i in range(self.n_layers - 1)]
 
     # auxiliary function to sort input parameters
     def dict_to_ordered_arr_np(self, 
@@ -274,29 +309,66 @@ class Restore_PCAplusNN(tf.keras.Model):
 
 
 
-    # restore attributes
-    def restore(self, 
-                filename,
-                ):
+    # from https://github.com/HTJense/cosmopower/blob/packaging-paper/cosmopower/cosmopower_PCAplusNN.py
+    def restore(self, filename: str, allow_pickle: bool = False) -> None:
         r"""
-        Load pre-trained model
+        Load pre-trained model.
+        The default file format is compressed numpy files (.npz). The
+        Module will attempt to use this as a file extension and restore
+        from there (i.e. look for `filename.npz`). If this file does
+        not exist, and `allow_pickle` is set to True, then the file
+        `filename.pkl` will be attempted to be read by `restore_pickle`.
+
+        The function will trim the file extension from `filename`, so
+        `restore("filename")` and `restore("filename.npz")` are identical.
 
         Parameters:
-            filename (str):
-                filename tag (without suffix) where model was saved
+        :param filename: filename (without suffix) where model was saved.
+        :param allow_pickle: whether or not to permit passing this filename to
+                             the `restore_pickle` function.
         """
-        # load attributes
-        f = open(filename + ".pkl", 'rb')
-        self.W_, self.b_, self.alphas_, self.betas_, \
-        self.parameters_mean_, self.parameters_std_, \
-        self.pca_mean_, self.pca_std_, \
-        self.features_mean_, self.features_std_, \
-        self.parameters, self.n_parameters, \
-        self.modes, self.n_modes, \
-        self.n_pcas, self.pca_transform_matrix_, \
-        self.n_hidden, self.n_layers, self.architecture = pickle.load(f)
-        f.close()
+        # Check if npz file exists.
+        filename_npz = filename + ".npz"
+        if not os.path.exists(filename_npz):
+            # Can we load this file as a pickle file?
+            filename_pkl = filename + ".pkl"
+            if allow_pickle and os.path.exists(filename_pkl):
+                self.restore_pickle(filename_pkl)
+                return
 
+            raise IOError(f"Failed to restore network from {filename}: "
+                          + (" is a pickle file, try setting 'allow_pickle = \
+                              True'" if os.path.exists(filename_pkl) else
+                             " does not exist."))
+
+        with open(filename_npz, "rb") as fp:
+            fpz = np.load(fp)
+
+            self.architecture = fpz["architecture"]
+            self.n_layers = fpz["n_layers"]
+            self.n_hidden = fpz["n_hidden"]
+            self.n_parameters = fpz["n_parameters"]
+            self.n_modes = fpz["n_modes"]
+
+            self.parameters = fpz["parameters"]
+            self.modes = fpz["modes"]
+
+            self.parameters_mean_ = fpz["parameters_mean"]
+            self.parameters_std_ = fpz["parameters_std"]
+            self.features_mean_ = fpz["features_mean"]
+            self.features_std_ = fpz["features_std"]
+
+            self.pca_mean_ = fpz["pca_mean"]
+            self.pca_std_ = fpz["pca_std"]
+            self.n_pcas = fpz["n_pcas"]
+            self.pca_transform_matrix_ = fpz["pca_transform_matrix"]
+
+            self.W_ = [fpz[f"W_{i}"] for i in range(self.n_layers)]
+            self.b_ = [fpz[f"b_{i}"] for i in range(self.n_layers)]
+            self.alphas_ = [
+                fpz[f"alphas_{i}"] for i in range(self.n_layers - 1)
+            ]
+            self.betas_ = [fpz[f"betas_{i}"] for i in range(self.n_layers - 1)]
 
 
 
