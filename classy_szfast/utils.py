@@ -13,7 +13,7 @@ import math
 from numpy import linalg as LA
 import mcfit
 from mcfit import P2xi
-import cosmopower
+# import cosmopower
 # import classy_sz as csz
 
 

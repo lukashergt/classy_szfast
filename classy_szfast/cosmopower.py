@@ -1,8 +1,8 @@
 from .utils import *
 from .config import *
 
-from cosmopower import cosmopower_NN
-from cosmopower import cosmopower_PCAplusNN
+from .restore_nn import Restore_NN
+from .restore_nn import Restore_PCAplusNN
 from .suppress_warnings import suppress_warnings
 
 dofftlog_alphas = False
@@ -226,45 +226,33 @@ for mp in cosmo_model_list:
     # print(folder, version)
     path_to_emulators = path_to_cosmopower_organization + '/' + folder +'/'
     
-    cp_tt_nn[mp] = cosmopower_NN(restore=True,
-                             restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TT'])
+    cp_tt_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TT'])
     
-    cp_te_nn[mp] = cosmopower_PCAplusNN(restore=True,
-                                    restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TE'])
+    cp_te_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TE'])
     
     with suppress_warnings():
-        cp_ee_nn[mp] = cosmopower_NN(restore=True,
-                                restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['EE'])
+        cp_ee_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['EE'])
     
-    cp_pp_nn[mp] = cosmopower_NN(restore=True,
-                             restore_filename=path_to_emulators + 'PP/' + emulator_dict[mp]['PP'])
+    cp_pp_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PP/' + emulator_dict[mp]['PP'])
     
-    cp_pknl_nn[mp] = cosmopower_NN(restore=True,
-                               restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKNL'])
+    cp_pknl_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKNL'])
     
-    cp_pkl_nn[mp] = cosmopower_NN(restore=True,
-                              restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKL'])
+    cp_pkl_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKL'])
 
     if (mp == 'lcdm') and (dofftlog_alphas == True):
-        cp_pkl_fftlog_alphas_real_nn[mp] = cosmopower_PCAplusNN(restore=True,
-                                 restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKLFFTLOG_ALPHAS_REAL']
+        cp_pkl_fftlog_alphas_real_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKLFFTLOG_ALPHAS_REAL']
                                  )
-        cp_pkl_fftlog_alphas_imag_nn[mp] = cosmopower_PCAplusNN(restore=True,
-                                 restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKLFFTLOG_ALPHAS_IMAG']
+        cp_pkl_fftlog_alphas_imag_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKLFFTLOG_ALPHAS_IMAG']
                                  )
         cp_pkl_fftlog_alphas_nus[mp] = np.load(path_to_emulators + 'PK/PKL_FFTLog_alphas_nu_v1.npz')
     
-    cp_der_nn[mp] = cosmopower_NN(restore=True,
-                              restore_filename=path_to_emulators + 'derived-parameters/' + emulator_dict[mp]['DER'])
+    cp_der_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'derived-parameters/' + emulator_dict[mp]['DER'])
     
-    cp_da_nn[mp] = cosmopower_NN(restore=True,
-                             restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['DAZ'])
+    cp_da_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['DAZ'])
     
-    cp_h_nn[mp] = cosmopower_NN(restore=True,
-                            restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['HZ'])
+    cp_h_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['HZ'])
     
-    cp_s8_nn[mp] = cosmopower_NN(restore=True,
-                             restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['S8Z'])
+    cp_s8_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['S8Z'])
     
 
 
