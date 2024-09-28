@@ -121,7 +121,10 @@ class Restore_NN(tf.keras.Model):
                              " does not exist."))
 
         with open(filename_npz, "rb") as fp:
-            fpz = np.load(fp)
+            fpz = np.load(fp, allow_pickle=True)["arr_0"].flatten()[0]
+
+            # print('filename_npz:', filename_npz)
+            # print("Keys in the .npz file:", list(fpz.keys()))
 
             self.architecture = fpz["architecture"]
             self.n_layers = fpz["n_layers"]
@@ -132,17 +135,35 @@ class Restore_NN(tf.keras.Model):
             self.parameters = list(fpz["parameters"])
             self.modes = fpz["modes"]
 
-            self.parameters_mean_ = fpz["parameters_mean"]
-            self.parameters_std_ = fpz["parameters_std"]
-            self.features_mean_ = fpz["features_mean"]
-            self.features_std_ = fpz["features_std"]
+            # self.parameters_mean_ = fpz["parameters_mean"]
+            # self.parameters_std_ = fpz["parameters_std"]
+            # self.features_mean_ = fpz["features_mean"]
+            # self.features_std_ = fpz["features_std"]
 
-            self.W_ = [fpz[f"W_{i}"] for i in range(self.n_layers)]
-            self.b_ = [fpz[f"b_{i}"] for i in range(self.n_layers)]
-            self.alphas_ = [
-                fpz[f"alphas_{i}"] for i in range(self.n_layers - 1)
-            ]
-            self.betas_ = [fpz[f"betas_{i}"] for i in range(self.n_layers - 1)]
+            # Attempt to load 'parameters_mean' or fall back to 'param_train_mean'
+            self.parameters_mean_ = fpz.get("parameters_mean", fpz.get("param_train_mean"))
+            self.parameters_std_ = fpz.get("parameters_std", fpz.get("param_train_std"))
+            self.features_mean_ = fpz.get("features_mean", fpz.get("feature_train_mean"))
+            self.features_std_ = fpz.get("features_std", fpz.get("feature_train_std"))
+
+
+            # Fallback to 'weights_' if individual 'W_i' are not found
+            if "weights_" in fpz:
+                # Assign the list of weight arrays from 'weights_' directly
+                self.W_ = fpz["weights_"]
+            else:
+                # Use individual weight arrays if available
+                self.W_ = [fpz[f"W_{i}"] for i in range(self.n_layers)]
+
+            # Fallback to 'biases_' if individual 'b_i' are not found
+            if "biases_" in fpz:
+                self.b_ = fpz["biases_"]
+            else:
+                self.b_ = [fpz[f"b_{i}"] for i in range(self.n_layers)]
+
+            self.alphas_ = fpz[f"alphas_"]
+            self.betas_ = fpz[f"betas_"]
+
 
     # auxiliary function to sort input parameters
     def dict_to_ordered_arr_np(self, 
@@ -342,7 +363,11 @@ class Restore_PCAplusNN(tf.keras.Model):
                              " does not exist."))
 
         with open(filename_npz, "rb") as fp:
-            fpz = np.load(fp)
+            fpz = np.load(fp, allow_pickle=True)["arr_0"].flatten()[0]
+
+            # print('filename_npz:', filename_npz)
+            # print("Keys in the .npz file:", list(fpz.keys()))
+
 
             self.architecture = fpz["architecture"]
             self.n_layers = fpz["n_layers"]
@@ -353,22 +378,62 @@ class Restore_PCAplusNN(tf.keras.Model):
             self.parameters = fpz["parameters"]
             self.modes = fpz["modes"]
 
-            self.parameters_mean_ = fpz["parameters_mean"]
-            self.parameters_std_ = fpz["parameters_std"]
-            self.features_mean_ = fpz["features_mean"]
-            self.features_std_ = fpz["features_std"]
+            # Attempt to load 'parameters_mean' or fall back to 'param_train_mean'
+            self.parameters_mean_ = fpz.get("parameters_mean", fpz.get("param_train_mean"))
+            self.parameters_std_ = fpz.get("parameters_std", fpz.get("param_train_std"))
+            self.features_mean_ = fpz.get("features_mean", fpz.get("feature_train_mean"))
+            self.features_std_ = fpz.get("features_std", fpz.get("feature_train_std"))
+
+            # Handle PCA-related keys
+            # self.pca_mean_ = fpz["pca_mean"]
+            # self.pca_std_ = fpz["pca_std"]
+            # self.n_pcas = fpz["n_pcas"]
 
             self.pca_mean_ = fpz["pca_mean"]
             self.pca_std_ = fpz["pca_std"]
             self.n_pcas = fpz["n_pcas"]
             self.pca_transform_matrix_ = fpz["pca_transform_matrix"]
 
-            self.W_ = [fpz[f"W_{i}"] for i in range(self.n_layers)]
-            self.b_ = [fpz[f"b_{i}"] for i in range(self.n_layers)]
-            self.alphas_ = [
-                fpz[f"alphas_{i}"] for i in range(self.n_layers - 1)
-            ]
-            self.betas_ = [fpz[f"betas_{i}"] for i in range(self.n_layers - 1)]
+            # print('n_pcas:', self.n_pcas)
+
+            # filename  = "/Users/boris/Work/CLASS-SZ/SO-SZ/cosmopower-organization/lcdm/TTTEEE/TE_v1.pkl"
+            # f = open(filename, 'rb')
+            # self.W_, self.b_, self.alphas_, self.betas_, \
+            # self.parameters_mean_, self.parameters_std_, \
+            # self.pca_mean_, self.pca_std_, \
+            # self.features_mean_, self.features_std_, \
+            # self.parameters, self.n_parameters, \
+            # self.modes, self.n_modes, \
+            # self.n_pcas, self.pca_transform_matrix_, \
+            # self.n_hidden, self.n_layers, self.architecture = pickle.load(f)
+
+            # print('self.n_pcas:', self.n_pcas)
+            # print('self.pca_transform_matrix_:', self.pca_transform_matrix_)
+            # print('PCA mean:', self.pca_mean_)
+            # print('PCA std:', self.pca_std_)
+            # f.close()
+            # import sys
+            # sys.exit(0)
+
+            # self.pca_transform_matrix_ = fpz["pca_transform_matrix"]        
+
+            # Fallback to 'weights_' if individual 'W_i' are not found
+            if "weights_" in fpz:
+                # Assign the list of weight arrays from 'weights_' directly
+                self.W_ = fpz["weights_"]
+            else:
+                # Use individual weight arrays if available
+                self.W_ = [fpz[f"W_{i}"] for i in range(self.n_layers)]
+
+            # Fallback to 'biases_' if individual 'b_i' are not found
+            if "biases_" in fpz:
+                self.b_ = fpz["biases_"]
+            else:
+                self.b_ = [fpz[f"b_{i}"] for i in range(self.n_layers)]
+
+            # Handle alphas and betas
+            self.alphas_ = fpz.get("alphas_", [fpz.get(f"alphas_{i}") for i in range(self.n_layers - 1)])
+            self.betas_ = fpz.get("betas_", [fpz.get(f"betas_{i}") for i in range(self.n_layers - 1)])
 
 
 
