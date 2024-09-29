@@ -18,7 +18,7 @@ with suppress_warnings():
     import tensorflow as tf
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 dtype = tf.float32
-import pickle
+
 
 class Restore_NN(tf.keras.Model):
 
