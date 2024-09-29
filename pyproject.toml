@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 version = "0.0.21"
+license = { text = "MIT" }
 name = "classy_szfast"
 maintainers = [{name = "Boris Bolliet",email="bb667@cam.ac.uk"}]
 description = "The accelerator of the class_sz code from https://github.com/CLASS-SZ"
