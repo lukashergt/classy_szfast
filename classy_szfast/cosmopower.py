@@ -224,7 +224,7 @@ def split_emulator_string(input_string):
 for mp in cosmo_model_list:
     folder, version = split_emulator_string(mp)
     # print(folder, version)
-    path_to_emulators = path_to_cosmopower_organization + '/' + folder +'/'
+    path_to_emulators = path_to_class_sz_data + '/' + folder +'/'
     
     cp_tt_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TT'])
     
