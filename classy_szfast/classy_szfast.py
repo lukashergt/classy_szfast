@@ -73,7 +73,7 @@ class Class_szfast(object):
 
 
         # cosmopower emulators
-        self.cp_path_to_cosmopower_organization = path_to_cosmopower_organization + '/'
+        # self.cp_path_to_cosmopower_organization = path_to_cosmopower_organization + '/'
         self.cp_tt_nn = cp_tt_nn
         self.cp_te_nn = cp_te_nn
         self.cp_ee_nn = cp_ee_nn
