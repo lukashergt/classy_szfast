@@ -26,8 +26,8 @@ jobs:
           python-version: "3.x"
       - name: Bump version with post increment
         run: |
-          # Extract current version
-          current_version=$(grep -Eo 'version="[^"]*' pyproject.toml | cut -d'"' -f2)
+          # Extract current version from pyproject.toml
+          current_version=$(grep -Eo 'version = "[^"]*' pyproject.toml | cut -d'"' -f2)
           echo "Current version: $current_version"
           
           # Check if it has a post-release (e.g., .post1)
@@ -45,7 +45,7 @@ jobs:
           echo "New version: $new_version"
 
           # Update version in pyproject.toml using sed
-          sed -i "s/version=\"$current_version\"/version=\"$new_version\"/" pyproject.toml
+          sed -i "s/version = \"$current_version\"/version = \"$new_version\"/" pyproject.toml
           
           # Export new_version for the next steps
           echo "new_version=$new_version" >> $GITHUB_ENV
