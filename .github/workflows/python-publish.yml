@@ -24,7 +24,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-
       - name: Bump version with post increment
         run: |
           # Extract current version
@@ -45,23 +44,18 @@ jobs:
           
           echo "New version: $new_version"
 
-          ls -alh
+          # Update version in pyproject.toml using sed
+          sed -i "s/version=\"$current_version\"/version=\"$new_version\"/" pyproject.toml
           
-          # Use bump2version with --current-version flag
-          # bump2version --current-version "$current_version" --new-version "$new_version" patch pyproject.toml
-          # Update version in setup.py using sed
-          # sed -i '' "s/version=\"$current_version\"/version=\"$new_version\"/" pyproject.toml
-          sed -i "s|version=\"[^\"]*\"|version=\"$new_version\"|" pyproject.toml
-          
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Export new_version for the next steps
+          echo "new_version=$new_version" >> $GITHUB_ENV
 
       - name: Commit and push version bump
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add pyproject.toml -f
-          git commit -m "Bump version to $new_version"
+          git commit -m "Bump version to ${{ env.new_version }}"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
