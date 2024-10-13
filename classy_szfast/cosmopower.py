@@ -43,7 +43,15 @@ emulator_dict['ede'] = {}
 emulator_dict['mnu-3states'] = {}
 emulator_dict['ede-v2'] = {}
 
-
+### note on ncdm:
+# N_ncdm : 3
+# m_ncdm : 0.02, 0.02, 0.02
+# deg_ncdm: 1
+# and
+# N_ncdm: 1
+# deg_ncdm: 3
+# m_ncdm : 0.02
+# are equivalent but deg_ncdm: 3 is much faster. 
 
 
 emulator_dict['lcdm']['TT'] = 'TT_v1'
@@ -60,6 +68,11 @@ emulator_dict['lcdm']['HZ'] = 'HZ_v1'
 emulator_dict['lcdm']['S8Z'] = 'S8Z_v1'
 emulator_dict['lcdm']['default'] = {}
 emulator_dict['lcdm']['default']['tau_reio'] = 0.054
+emulator_dict['lcdm']['default']['H0'] = 67.66
+emulator_dict['lcdm']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['lcdm']['default']['omega_b'] = 0.02242
+emulator_dict['lcdm']['default']['omega_cdm'] = 0.11933
+emulator_dict['lcdm']['default']['n_s'] = 0.9665
 emulator_dict['lcdm']['default']['N_ur'] = 2.0328
 emulator_dict['lcdm']['default']['N_ncdm'] = 1
 emulator_dict['lcdm']['default']['m_ncdm'] = 0.06
@@ -76,6 +89,11 @@ emulator_dict['mnu']['HZ'] = 'HZ_mnu_v1'
 emulator_dict['mnu']['S8Z'] = 'S8Z_mnu_v1'
 emulator_dict['mnu']['default'] = {}
 emulator_dict['mnu']['default']['tau_reio'] = 0.054
+emulator_dict['mnu']['default']['H0'] = 67.66
+emulator_dict['mnu']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['mnu']['default']['omega_b'] = 0.02242
+emulator_dict['mnu']['default']['omega_cdm'] = 0.11933
+emulator_dict['mnu']['default']['n_s'] = 0.9665
 emulator_dict['mnu']['default']['N_ur'] = 2.0328
 emulator_dict['mnu']['default']['N_ncdm'] = 1
 emulator_dict['mnu']['default']['m_ncdm'] = 0.06
@@ -92,7 +110,12 @@ emulator_dict['neff']['HZ'] = 'HZ_neff_v1'
 emulator_dict['neff']['S8Z'] = 'S8Z_neff_v1'
 emulator_dict['neff']['default'] = {}
 emulator_dict['neff']['default']['tau_reio'] = 0.054
-emulator_dict['neff']['default']['N_ur'] = 2.0328
+emulator_dict['neff']['default']['H0'] = 67.66
+emulator_dict['neff']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['neff']['default']['omega_b'] = 0.02242
+emulator_dict['neff']['default']['omega_cdm'] = 0.11933
+emulator_dict['neff']['default']['n_s'] = 0.9665
+emulator_dict['neff']['default']['N_ur'] = 2.0328 # this is the default value in class v2 to get Neff = 3.046
 emulator_dict['neff']['default']['N_ncdm'] = 1
 emulator_dict['neff']['default']['m_ncdm'] = 0.06
 
@@ -109,7 +132,12 @@ emulator_dict['wcdm']['HZ'] = 'HZ_w_v1'
 emulator_dict['wcdm']['S8Z'] = 'S8Z_w_v1'
 emulator_dict['wcdm']['default'] = {}
 emulator_dict['wcdm']['default']['tau_reio'] = 0.054
-emulator_dict['wcdm']['default']['N_ur'] = 2.0328
+emulator_dict['wcdm']['default']['H0'] = 67.66
+emulator_dict['wcdm']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['wcdm']['default']['omega_b'] = 0.02242
+emulator_dict['wcdm']['default']['omega_cdm'] = 0.11933
+emulator_dict['wcdm']['default']['n_s'] = 0.9665
+emulator_dict['wcdm']['default']['N_ur'] = 2.0328 # this is the default value in class v2 to get Neff = 3.046
 emulator_dict['wcdm']['default']['N_ncdm'] = 1
 emulator_dict['wcdm']['default']['m_ncdm'] = 0.06
 
@@ -126,10 +154,15 @@ emulator_dict['ede']['S8Z'] = 'S8Z_v1'
 emulator_dict['ede']['default'] = {}
 emulator_dict['ede']['default']['fEDE'] = 0.001
 emulator_dict['ede']['default']['tau_reio'] = 0.054
+emulator_dict['ede']['default']['H0'] = 67.66
+emulator_dict['ede']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['ede']['default']['omega_b'] = 0.02242
+emulator_dict['ede']['default']['omega_cdm'] = 0.11933
+emulator_dict['ede']['default']['n_s'] = 0.9665
 emulator_dict['ede']['default']['log10z_c'] = 3.562 # e.g. from https://github.com/mwt5345/class_ede/blob/master/class/notebooks-ede/2-CMB-Comparison.ipynb
 emulator_dict['ede']['default']['thetai_scf'] = 2.83 # e.g. from https://github.com/mwt5345/class_ede/blob/master/class/notebooks-ede/2-CMB-Comparison.ipynb
 emulator_dict['ede']['default']['r'] = 0.
-emulator_dict['ede']['default']['N_ur'] = 0.00641
+emulator_dict['ede']['default']['N_ur'] = 0.00641 # this is the default value in class v2 to get Neff = 3.046
 emulator_dict['ede']['default']['N_ncdm'] = 3
 emulator_dict['ede']['default']['m_ncdm'] = 0.02
 
@@ -146,7 +179,12 @@ emulator_dict['mnu-3states']['HZ'] = 'HZ_v1'
 emulator_dict['mnu-3states']['S8Z'] = 'S8Z_v1'
 emulator_dict['mnu-3states']['default'] = {}
 emulator_dict['mnu-3states']['default']['tau_reio'] = 0.054
-emulator_dict['mnu-3states']['default']['N_ur'] = 0.00641
+emulator_dict['mnu-3states']['default']['H0'] = 67.66
+emulator_dict['mnu-3states']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['mnu-3states']['default']['omega_b'] = 0.02242
+emulator_dict['mnu-3states']['default']['omega_cdm'] = 0.11933
+emulator_dict['mnu-3states']['default']['n_s'] = 0.9665
+emulator_dict['mnu-3states']['default']['N_ur'] = 0.00641 # this is the default value in class v2 to get Neff = 3.046
 emulator_dict['mnu-3states']['default']['N_ncdm'] = 3
 emulator_dict['mnu-3states']['default']['m_ncdm'] = 0.02
 
@@ -168,10 +206,11 @@ emulator_dict['ede-v2']['default']['H0'] = 67.66
 emulator_dict['ede-v2']['default']['ln10^{10}A_s'] = 3.047
 emulator_dict['ede-v2']['default']['omega_b'] = 0.02242
 emulator_dict['ede-v2']['default']['omega_cdm'] = 0.11933
+emulator_dict['ede-v2']['default']['n_s'] = 0.9665
 emulator_dict['ede-v2']['default']['log10z_c'] = 3.562 # e.g. from https://github.com/mwt5345/class_ede/blob/master/class/notebooks-ede/2-CMB-Comparison.ipynb
 emulator_dict['ede-v2']['default']['thetai_scf'] = 2.83 # e.g. from https://github.com/mwt5345/class_ede/blob/master/class/notebooks-ede/2-CMB-Comparison.ipynb
 emulator_dict['ede-v2']['default']['r'] = 0.
-emulator_dict['ede-v2']['default']['N_ur'] = 0.00441
+emulator_dict['ede-v2']['default']['N_ur'] = 0.00441 # this is the default value in class v3 to get Neff = 3.044
 emulator_dict['ede-v2']['default']['N_ncdm'] = 3
 emulator_dict['ede-v2']['default']['m_ncdm'] = 0.02
 

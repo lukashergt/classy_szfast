@@ -64,7 +64,10 @@ class Class_szfast(object):
         self.logA_fast = 0
 
 
-        set_verbosity(params_settings["classy_sz_verbose"])
+        try:
+            set_verbosity(params_settings["classy_sz_verbose"])
+        except:
+            pass
         self.logger = logging.getLogger(__name__)
         
 
