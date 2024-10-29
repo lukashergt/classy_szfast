@@ -7,34 +7,64 @@ from .suppress_warnings import suppress_warnings
 
 dofftlog_alphas = False
 
-cosmopower_derived_params_names = ['100*theta_s',
-                                   'sigma8',
-                                   'YHe',
-                                   'z_reio',
-                                   'Neff',
-                                   'tau_rec',
-                                   'z_rec',
-                                   'rs_rec',
-                                   'ra_rec',
-                                   'tau_star',
-                                   'z_star',
-                                   'rs_star',
-                                   'ra_star',
-                                   'rs_drag']
+#cosmopower_derived_params_names = ['100*theta_s',
+#                                   'sigma8',
+#                                   'YHe',
+#                                   'z_reio',
+#                                   'Neff',
+#                                   'tau_rec',
+#                                   'z_rec',
+#                                   'rs_rec',
+#                                   'ra_rec',
+#                                   'tau_star',
+#                                   'z_star',
+#                                   'rs_star',
+#                                   'ra_star',
+#                                   'rs_drag']
+cosmopower_derived_params_names = [
+    'Omega_m',
+    'Neff',
+    'sigma8',
+    'YHe',
+    'tau_eq',
+    'z_eq',
+    'k_eq',
+    'tau_rec',
+    'z_rec',
+    'rs_rec',
+    'ra_rec',
+    'tau_star',
+    'z_star',
+    'rs_star',
+    'ra_star',
+    'theta_star_100',
+    'theta_s_100',
+    'tau_d',
+    'z_d',
+    'rs_d',
+    'z_reio',
+    'age',
+    'conformal_age',
+]
+cosmopower_derived_params_idx_dict = {cosmopower_derived_params_names[i]: i for i in range(len(cosmopower_derived_params_names))}
+cosmopower_derived_params_names.remove('Omega_m')
+cosmopower_derived_params_idx_dict.pop('Omega_m')
 
 cp_l_max_scalars = 11000 # max multipole of train ing data
 
 cosmo_model_list = [
+    'LCDM',
     'lcdm',
-    'mnu',
-    'neff',
-    'wcdm',
-    'ede',
-    'mnu-3states',
-    'ede-v2'
+    #'mnu',
+    #'neff',
+    #'wcdm',
+    #'ede',
+    #'mnu-3states',
+    #'ede-v2',
 ]
 
 emulator_dict = {}
+emulator_dict['LCDM'] = {}
 emulator_dict['lcdm'] = {}
 emulator_dict['mnu'] = {}
 emulator_dict['neff'] = {}
@@ -53,6 +83,27 @@ emulator_dict['ede-v2'] = {}
 # m_ncdm : 0.02
 # are equivalent but deg_ncdm: 3 is much faster. 
 
+
+emulator_dict['LCDM']['TT'] = 'TT_v0'
+emulator_dict['LCDM']['TE'] = 'TE_v0'
+emulator_dict['LCDM']['EE'] = 'EE_v0'
+emulator_dict['LCDM']['PP'] = 'PP_v0'
+emulator_dict['LCDM']['PKNL'] = 'PKNL_v0'
+emulator_dict['LCDM']['PKL'] = 'PKL_v0'
+emulator_dict['LCDM']['DER'] = 'DER_v0'
+emulator_dict['LCDM']['DAZ'] = 'DAZ_v0'
+emulator_dict['LCDM']['HZ'] = 'HZ_v0'
+emulator_dict['LCDM']['S8Z'] = 'S8Z_v0'
+emulator_dict['LCDM']['default'] = {}
+emulator_dict['LCDM']['default']['tau_reio'] = 0.054
+emulator_dict['LCDM']['default']['H0'] = 67.66
+emulator_dict['LCDM']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['LCDM']['default']['omega_b'] = 0.02242
+emulator_dict['LCDM']['default']['omega_cdm'] = 0.11933
+emulator_dict['LCDM']['default']['n_s'] = 0.9665
+emulator_dict['LCDM']['default']['N_ur'] = 2.0328
+emulator_dict['LCDM']['default']['N_ncdm'] = 1
+emulator_dict['LCDM']['default']['m_ncdm'] = 0.06
 
 emulator_dict['lcdm']['TT'] = 'TT_v1'
 emulator_dict['lcdm']['TE'] = 'TE_v1'
@@ -241,6 +292,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 with suppress_warnings():
     import tensorflow as tf
+    #tf.config.set_visible_devices([], 'GPU')
     tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
@@ -260,38 +312,39 @@ def split_emulator_string(input_string):
 
 
 
-for mp in cosmo_model_list:
-    folder, version = split_emulator_string(mp)
-    # print(folder, version)
-    path_to_emulators = path_to_class_sz_data + '/' + folder +'/'
-    
-    cp_tt_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TT'])
-    
-    cp_te_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TE'])
-    
-    with suppress_warnings():
-        cp_ee_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['EE'])
-    
-    cp_pp_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PP/' + emulator_dict[mp]['PP'])
-    
-    cp_pknl_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKNL'])
-    
-    cp_pkl_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKL'])
+with tf.device('cpu'):
+    for mp in cosmo_model_list:
+        folder, version = split_emulator_string(mp)
+        # print(folder, version)
+        path_to_emulators = path_to_class_sz_data + '/' + folder +'/'
+        
+        cp_tt_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TT'])
+        
+        cp_te_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['TE'])
+        
+        with suppress_warnings():
+            cp_ee_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'TTTEEE/' + emulator_dict[mp]['EE'])
+        
+        cp_pp_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PP/' + emulator_dict[mp]['PP'])
+        
+        cp_pknl_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKNL'])
+        
+        cp_pkl_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKL'])
 
-    if (mp == 'lcdm') and (dofftlog_alphas == True):
-        cp_pkl_fftlog_alphas_real_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKLFFTLOG_ALPHAS_REAL']
-                                 )
-        cp_pkl_fftlog_alphas_imag_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKLFFTLOG_ALPHAS_IMAG']
-                                 )
-        cp_pkl_fftlog_alphas_nus[mp] = np.load(path_to_emulators + 'PK/PKL_FFTLog_alphas_nu_v1.npz')
-    
-    cp_der_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'derived-parameters/' + emulator_dict[mp]['DER'])
-    
-    cp_da_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['DAZ'])
-    
-    cp_h_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['HZ'])
-    
-    cp_s8_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['S8Z'])
+        if (mp == 'lcdm') and (dofftlog_alphas == True):
+            cp_pkl_fftlog_alphas_real_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKLFFTLOG_ALPHAS_REAL']
+                                     )
+            cp_pkl_fftlog_alphas_imag_nn[mp] = Restore_PCAplusNN(restore_filename=path_to_emulators + 'PK/' + emulator_dict[mp]['PKLFFTLOG_ALPHAS_IMAG']
+                                     )
+            cp_pkl_fftlog_alphas_nus[mp] = np.load(path_to_emulators + 'PK/PKL_FFTLog_alphas_nu_v1.npz')
+        
+        cp_der_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'derived-parameters/' + emulator_dict[mp]['DER'])
+        
+        cp_da_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['DAZ'])
+        
+        cp_h_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['HZ'])
+        
+        cp_s8_nn[mp] = Restore_NN(restore_filename=path_to_emulators + 'growth-and-distances/' + emulator_dict[mp]['S8Z'])
     
 
 
