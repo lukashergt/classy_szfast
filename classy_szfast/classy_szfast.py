@@ -374,7 +374,7 @@ class Class_szfast(object):
             factor_pp = 1./lcp**3
         elif self.cosmo_model == 'LCDM':
             factor_ttteee = 1
-            factor_pp = 1
+            factor_pp = (lcp * (lcp+1))**2 / (2*np.pi)
         else:
             factor_ttteee = 1./(lcp*(lcp+1.)/2./np.pi)
             factor_pp = 1./(lcp*(lcp+1.))**2.        
