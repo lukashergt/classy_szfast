@@ -114,6 +114,8 @@ class Class_szfast(object):
                             5: 'mnu-3states',
                             6: 'ede-v2',
                             7: 'LCDM',
+                            8: 'LCDM_Mnu-d3',
+                            9: 'LCDM_OmegaK',
                             }
         
 
@@ -121,7 +123,7 @@ class Class_szfast(object):
 
             self.cp_ndspl_k = 1
             self.cp_nk = 1000
-        elif cosmo_model_dict[params_settings['cosmo_model']] == 'LCDM':
+        elif cosmo_model_dict[params_settings['cosmo_model']] in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             self.cp_ndspl_k = 1
             self.cp_nk = 501
         
@@ -207,7 +209,7 @@ class Class_szfast(object):
             self.pk_power_fac= (dls)**-1
 
 
-        if cosmo_model_dict[params_settings['cosmo_model']] == 'LCDM':
+        if cosmo_model_dict[params_settings['cosmo_model']] in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             self.cp_z_interp = np.linspace(0.,20.,4001)
         else:
             self.cp_z_interp = np.linspace(0.,20.,5000)
@@ -270,7 +272,7 @@ class Class_szfast(object):
         update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
 
         # print(params_values)
-        if self.cosmo_model == 'LCDM':
+        if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             theta_s_asked = params_values['theta_s_100']
         else:
             theta_s_asked = params_values['100*theta_s']
@@ -289,7 +291,7 @@ class Class_szfast(object):
                           tol = 1e-10,
                           method='hybr')
 
-        if self.cosmo_model == 'LCDM':
+        if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             params_values.pop('theta_s_100')
         else:
             params_values.pop('100*theta_s')
@@ -372,7 +374,7 @@ class Class_szfast(object):
         if self.cosmo_model == 'ede-v2':
             factor_ttteee = 1./lcp**2 
             factor_pp = 1./lcp**3
-        elif self.cosmo_model == 'LCDM':
+        elif self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             factor_ttteee = 1
             factor_pp = (lcp * (lcp+1))**2 / (2*np.pi)
         else:
@@ -454,7 +456,7 @@ class Class_szfast(object):
                 pk_ae  = pkl_p + self.Amod*(pknl_p-pkl_p)
                 predicted_pk_spectrum_z.append(pk_ae)
 
-        elif self.cosmo_model == 'LCDM':
+        elif self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             for zp in z_arr:
                 params_dict_pp = params_dict.copy()
                 params_dict_pp['z_pk_save_nonclass'] = [zp]
@@ -560,7 +562,7 @@ class Class_szfast(object):
                 params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
 
 
-        if self.cosmo_model == 'LCDM':
+        if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             s8z  = self.cp_s8_nn[self.cosmo_model].ten_to_predictions_np(params_dict)
         else:
             s8z  = self.cp_s8_nn[self.cosmo_model].predictions_np(params_dict)
@@ -735,7 +737,7 @@ class Class_szfast(object):
                 params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
 
         self.cp_predicted_hubble = self.cp_h_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
-        if self.cosmo_model == 'LCDM':
+        if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             self.cp_predicted_hubble *= 1e3 / c
  
         self.hz_interp = scipy.interpolate.interp1d(
@@ -766,7 +768,7 @@ class Class_szfast(object):
                 params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
 
         # deal with different scaling of DA in different model from emulator training
-        if self.cosmo_model == 'ede-v2' or self.cosmo_model == 'LCDM':
+        if self.cosmo_model in ['ede-v2', 'LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
 
             self.cp_predicted_da  = self.cp_da_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
             self.cp_predicted_da = np.insert(self.cp_predicted_da, 0, 0)
@@ -918,7 +920,7 @@ class Class_szfast(object):
 
     def rs_drag(self):
         try:
-            if self.cosmo_model == 'LCDM':
+            if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
                 return self.cp_predicted_der[cosmopower_derived_params_idx_dict['rs_d']]
             return self.cp_predicted_der[13]
         except AttributeError:

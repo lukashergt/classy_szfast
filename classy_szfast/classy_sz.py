@@ -521,9 +521,9 @@ class classy_sz(classy):
             if collector.post:
                 state[product] = collector.post(*state[product])
         # Prepare derived parameters
-        cosmo_model_dict = {0: 'lcdm', 1: 'mnu', 2: 'neff', 3: 'wcdm', 4: 'ede', 5: 'mnu-3states', 6: 'ede-v2', 7: 'LCDM'}
+        cosmo_model_dict = {0: 'lcdm', 1: 'mnu', 2: 'neff', 3: 'wcdm', 4: 'ede', 5: 'mnu-3states', 6: 'ede-v2', 7: 'LCDM', 8: 'LCDM_Mnu-d3', 9: 'LCDM_OmegaK'}
         cosmo_model = cosmo_model_dict[self.extra_args['cosmo_model']]
-        if cosmo_model == 'LCDM':
+        if cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             params_listvalues_dict = {}
             for k, v in zip(params_values.keys(),params_values.values()):
                 params_listvalues_dict[k]=[v]
@@ -545,7 +545,7 @@ class classy_sz(classy):
                     output_idx_dict[p] = self.output_params.index(p)
                     self.output_params.remove(p)
         d, d_extra = self._get_derived_all(derived_requested=want_derived)
-        if cosmo_model == 'LCDM':
+        if cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
             for p in special_params:
                 if p in derived_idx_dict:
                     self.derived_extra.insert(derived_idx_dict[p], p)

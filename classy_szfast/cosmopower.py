@@ -47,13 +47,15 @@ cosmopower_derived_params_names = [
     'conformal_age',
 ]
 cosmopower_derived_params_idx_dict = {cosmopower_derived_params_names[i]: i for i in range(len(cosmopower_derived_params_names))}
-cosmopower_derived_params_names.remove('Omega_m')
-cosmopower_derived_params_idx_dict.pop('Omega_m')
+#cosmopower_derived_params_names.remove('Omega_m')
+#cosmopower_derived_params_idx_dict.pop('Omega_m')
 
 cp_l_max_scalars = 11000 # max multipole of train ing data
 
 cosmo_model_list = [
     'LCDM',
+    'LCDM_Mnu-d3',
+    'LCDM_OmegaK',
     'lcdm',
     #'mnu',
     #'neff',
@@ -65,6 +67,8 @@ cosmo_model_list = [
 
 emulator_dict = {}
 emulator_dict['LCDM'] = {}
+emulator_dict['LCDM_Mnu-d3'] = {}
+emulator_dict['LCDM_OmegaK'] = {}
 emulator_dict['lcdm'] = {}
 emulator_dict['mnu'] = {}
 emulator_dict['neff'] = {}
@@ -104,6 +108,50 @@ emulator_dict['LCDM']['default']['n_s'] = 0.9665
 emulator_dict['LCDM']['default']['N_ur'] = 2.0328
 emulator_dict['LCDM']['default']['N_ncdm'] = 1
 emulator_dict['LCDM']['default']['m_ncdm'] = 0.06
+
+emulator_dict['LCDM_Mnu-d3']['TT'] = 'TT_v0'
+emulator_dict['LCDM_Mnu-d3']['TE'] = 'TE_v0'
+emulator_dict['LCDM_Mnu-d3']['EE'] = 'EE_v0'
+emulator_dict['LCDM_Mnu-d3']['PP'] = 'PP_v0'
+emulator_dict['LCDM_Mnu-d3']['PKNL'] = 'PKNL_v0'
+emulator_dict['LCDM_Mnu-d3']['PKL'] = 'PKL_v0'
+emulator_dict['LCDM_Mnu-d3']['DER'] = 'DER_v0'
+emulator_dict['LCDM_Mnu-d3']['DAZ'] = 'DAZ_v0'
+emulator_dict['LCDM_Mnu-d3']['HZ'] = 'HZ_v0'
+emulator_dict['LCDM_Mnu-d3']['S8Z'] = 'S8Z_v0'
+emulator_dict['LCDM_Mnu-d3']['default'] = {}
+emulator_dict['LCDM_Mnu-d3']['default']['tau_reio'] = 0.054
+emulator_dict['LCDM_Mnu-d3']['default']['H0'] = 67.66
+emulator_dict['LCDM_Mnu-d3']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['LCDM_Mnu-d3']['default']['omega_b'] = 0.02242
+emulator_dict['LCDM_Mnu-d3']['default']['omega_cdm'] = 0.11933
+emulator_dict['LCDM_Mnu-d3']['default']['n_s'] = 0.9665
+emulator_dict['LCDM_Mnu-d3']['default']['N_ur'] = 0.00641
+emulator_dict['LCDM_Mnu-d3']['default']['N_ncdm'] = 1
+emulator_dict['LCDM_Mnu-d3']['default']['deg_ncdm'] = 3
+emulator_dict['LCDM_Mnu-d3']['default']['m_ncdm'] = 0.06
+
+emulator_dict['LCDM_OmegaK']['TT'] = 'TT_v0'
+emulator_dict['LCDM_OmegaK']['TE'] = 'TE_v0'
+emulator_dict['LCDM_OmegaK']['EE'] = 'EE_v0'
+emulator_dict['LCDM_OmegaK']['PP'] = 'PP_v0'
+emulator_dict['LCDM_OmegaK']['PKNL'] = 'PKNL_v0'
+emulator_dict['LCDM_OmegaK']['PKL'] = 'PKL_v0'
+emulator_dict['LCDM_OmegaK']['DER'] = 'DER_v0'
+emulator_dict['LCDM_OmegaK']['DAZ'] = 'DAZ_v0'
+emulator_dict['LCDM_OmegaK']['HZ'] = 'HZ_v0'
+emulator_dict['LCDM_OmegaK']['S8Z'] = 'S8Z_v0'
+emulator_dict['LCDM_OmegaK']['default'] = {}
+emulator_dict['LCDM_OmegaK']['default']['tau_reio'] = 0.054
+emulator_dict['LCDM_OmegaK']['default']['H0'] = 67.66
+emulator_dict['LCDM_OmegaK']['default']['ln10^{10}A_s'] = 3.047
+emulator_dict['LCDM_OmegaK']['default']['omega_b'] = 0.02242
+emulator_dict['LCDM_OmegaK']['default']['omega_cdm'] = 0.11933
+emulator_dict['LCDM_OmegaK']['default']['n_s'] = 0.9665
+emulator_dict['LCDM_OmegaK']['default']['N_ur'] = 2.0328
+emulator_dict['LCDM_OmegaK']['default']['N_ncdm'] = 1
+emulator_dict['LCDM_OmegaK']['default']['m_ncdm'] = 0.06
+emulator_dict['LCDM_OmegaK']['default']['Omega_k'] = 0.0
 
 emulator_dict['lcdm']['TT'] = 'TT_v1'
 emulator_dict['lcdm']['TE'] = 'TE_v1'
