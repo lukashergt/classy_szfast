@@ -563,13 +563,14 @@ class Class_szfast(object):
 
 
         if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
-            s8z  = self.cp_s8_nn[self.cosmo_model].ten_to_predictions_np(params_dict)
+            self.cp_predicted_s8z = self.cp_s8_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
         else:
-            s8z  = self.cp_s8_nn[self.cosmo_model].predictions_np(params_dict)
-        # print(self.s8z)
+            self.cp_predicted_s8z = self.cp_s8_nn[self.cosmo_model].predictions_np(params_dict)[0]
+        print("sigma8      =", self.sigma8)
+        print("sigma8(z=0) =", self.cp_predicted_s8z[0])
         self.s8z_interp = scipy.interpolate.interp1d(
-                                                    np.linspace(0.,20.,5000),
-                                                    s8z[0],
+                                                    self.cp_z_interp,
+                                                    self.cp_predicted_s8z,
                                                     kind='linear',
                                                     axis=-1,
                                                     copy=True,
