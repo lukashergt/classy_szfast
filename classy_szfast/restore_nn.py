@@ -133,6 +133,9 @@ class Restore_NN(tf.keras.Model):
             self.n_modes = fpz["n_modes"]
 
             self.parameters = list(fpz["parameters"])
+            if 'logA' in self.parameters:
+                self.parameters.insert(self.parameters.index('logA'), 'ln10^{10}A_s')
+                self.parameters.remove('logA')
             self.modes = fpz["modes"]
 
             # self.parameters_mean_ = fpz["parameters_mean"]
@@ -181,6 +184,12 @@ class Restore_NN(tf.keras.Model):
                 parameters sorted according to desired order
         """
         if self.parameters is not None:
+            if 'z_pk' in self.parameters:
+                self.parameters.remove('z_pk')
+                self.parameters.append('z_pk_save_nonclass')
+            elif 'z' in self.parameters:
+                self.parameters.remove('z')
+                self.parameters.append('z_pk_save_nonclass')
             return np.stack([input_dict[k] for k in self.parameters], axis=1)
         else:
             return np.stack([input_dict[k] for k in input_dict], axis=1)
@@ -376,6 +385,9 @@ class Restore_PCAplusNN(tf.keras.Model):
             self.n_modes = fpz["n_modes"]
 
             self.parameters = fpz["parameters"]
+            if 'logA' in self.parameters:
+                self.parameters.insert(self.parameters.index('logA'), 'ln10^{10}A_s')
+                self.parameters.remove('logA')
             self.modes = fpz["modes"]
 
             # Attempt to load 'parameters_mean' or fall back to 'param_train_mean'

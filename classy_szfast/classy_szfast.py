@@ -11,6 +11,7 @@ import time
 from multiprocessing import Process
 from mcfit import TophatVar
 from scipy.interpolate import CubicSpline
+from scipy.constants import c
 import pickle
 import jax 
 jax.config.update("jax_enable_x64", True)
@@ -94,7 +95,17 @@ class Class_szfast(object):
        
         self.cp_lmax = cp_l_max_scalars
 
-        cosmo_model_dict = {i: model for i, model in enumerate(cosmo_model_list)}
+        cosmo_model_dict = {0: 'lcdm',
+                            1: 'mnu',
+                            2: 'neff',
+                            3: 'wcdm',
+                            4: 'ede',
+                            5: 'mnu-3states',
+                            6: 'ede-v2',
+                            7: 'LCDM',
+                            8: 'LCDM_Mnu-d3',
+                            9: 'LCDM_OmegaK',
+                            }
 
         if (cosmo_model_dict[params_settings['cosmo_model']] == 'ede-v2'):
         
@@ -185,7 +196,7 @@ class Class_szfast(object):
             self.cp_pkl_fftlog_alphas_real_nn  = cp_pkl_fftlog_alphas_real_nn
             self.cp_pkl_fftlog_alphas_imag_nn = cp_pkl_fftlog_alphas_imag_nn
 
-        self.cosmo_model = 'lcdm'
+        self.cosmo_model = 'LCDM'
 
         self.use_Amod = 0
         self.Amod = 0 
@@ -197,11 +208,26 @@ class Class_szfast(object):
         self.pk_z_bins_A1 = 0
         self.pk_z_bins_A2 = 0
         
+        cosmo_model_dict = {0: 'lcdm',
+                            1: 'mnu',
+                            2: 'neff',
+                            3: 'wcdm',
+                            4: 'ede',
+                            5: 'mnu-3states',
+                            6: 'ede-v2',
+                            7: 'LCDM',
+                            8: 'LCDM_Mnu-d3',
+                            9: 'LCDM_OmegaK',
+                            }
+        
 
         if cosmo_model_dict[params_settings['cosmo_model']] == 'ede-v2':
 
             self.cp_ndspl_k = 1
             self.cp_nk = 1000
+        elif cosmo_model_dict[params_settings['cosmo_model']] in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            self.cp_ndspl_k = 1
+            self.cp_nk = 501
         
         else:
         
@@ -267,7 +293,10 @@ class Class_szfast(object):
 
         
         self.cp_z_interp_zmax = 20.
-        self.cp_z_interp = self.linspace(0.,self.cp_z_interp_zmax,5000)
+        if cosmo_model_dict[params_settings['cosmo_model']] in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            self.cp_z_interp = self.linspace(0.,self.cp_z_interp_zmax,4001)
+        else:
+            self.cp_z_interp = self.linspace(0.,self.cp_z_interp_zmax,5000)
 
         self.csz_base = None
 
@@ -393,7 +422,10 @@ class Class_szfast(object):
         update_params_with_defaults(params_values, self.emulator_dict[self.cosmo_model]['default'])
 
         # print(params_values)
-        theta_s_asked = params_values['100*theta_s']
+        if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            theta_s_asked = params_values['theta_s_100']
+        else:
+            theta_s_asked = params_values['100*theta_s']
         def fzero(H0_goal):
           params_values['H0'] = H0_goal[0]
           params_dict = {}
@@ -409,7 +441,10 @@ class Class_szfast(object):
                           tol = 1e-10,
                           method='hybr')
 
-        params_values.pop('100*theta_s')
+        if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            params_values.pop('theta_s_100')
+        else:
+            params_values.pop('100*theta_s')
         params_values['H0'] = sol.x[0]
         return 1
 
@@ -489,6 +524,9 @@ class Class_szfast(object):
         if self.cosmo_model == 'ede-v2':
             factor_ttteee = 1./lcp**2 
             factor_pp = 1./lcp**3
+        elif self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            factor_ttteee = 1
+            factor_pp = (lcp * (lcp+1))**2 / (2*np.pi)
         else:
             factor_ttteee = 1./(lcp*(lcp+1.)/2./self.pi)
             factor_pp = 1./(lcp*(lcp+1.))**2.        
@@ -570,6 +608,12 @@ class Class_szfast(object):
                 pknl_p = self.cp_pknl_nn[self.cosmo_model].predictions_np(params_dict_pp)[0]
                 pk_ae  = pkl_p + self.Amod*(pknl_p-pkl_p)
                 predicted_pk_spectrum_z.append(pk_ae)
+
+        elif self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            for zp in z_arr:
+                params_dict_pp = params_dict.copy()
+                params_dict_pp['z_pk_save_nonclass'] = [zp]
+                predicted_pk_spectrum_z.append(self.cp_pkl_nn[self.cosmo_model].ten_to_predictions_np(params_dict_pp)[0])
 
         elif self.use_pk_z_bins:
             # print('>>> using pk_z_bins')
@@ -739,10 +783,13 @@ class Class_szfast(object):
                 params_dict['m_ncdm'] =  [float(params_dict['m_ncdm'][0].split(',')[0])]
 
 
-        s8z  = self.cp_s8_nn[self.cosmo_model].predictions_np(params_dict)
+        if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            s8z = self.cp_s8_nn[self.cosmo_model].ten_to_predictions_np(params_dict)
+        else:
+            s8z  = self.cp_s8_nn[self.cosmo_model].predictions_np(params_dict)
         # print(self.s8z)
         self.s8z_interp = scipy.interpolate.interp1d(
-                                                    self.linspace(0.,20.,5000),
+                                                    self.cp_z_interp,
                                                     s8z[0],
                                                     kind='linear',
                                                     axis=-1,
@@ -930,6 +977,8 @@ class Class_szfast(object):
         else:
             self.cp_predicted_hubble = self.cp_h_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
             # print("self.cp_predicted_hubble",self.cp_predicted_hubble)
+            if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+                self.cp_predicted_hubble *= 1e3 / c
             
 
             self.hz_interp = scipy.interpolate.interp1d(
@@ -939,7 +988,7 @@ class Class_szfast(object):
                                                 axis=-1,
                                                 copy=True,
                                                 bounds_error=False,
-                                                fill_value=0.,
+                                                fill_value=np.nan,
                                                 assume_sorted=False)
 
     def calculate_chi(self,
@@ -975,7 +1024,7 @@ class Class_szfast(object):
 
         else:
             # deal with different scaling of DA in different model from emulator training
-            if self.cosmo_model == 'ede-v2':
+            if self.cosmo_model in ['ede-v2', 'LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
 
                 self.cp_predicted_da  = self.cp_da_nn[self.cosmo_model].ten_to_predictions_np(params_dict)[0]
                 self.cp_predicted_da = np.insert(self.cp_predicted_da, 0, 0)
@@ -992,7 +1041,7 @@ class Class_szfast(object):
                                                         axis=-1,
                                                         copy=True,
                                                         bounds_error=False,
-                                                        fill_value=0,
+                                                        fill_value=np.nan,
                                                         assume_sorted=False)
 
     def get_cmb_cls(self,ell_factor=True,Tcmb_uk = Tcmb_uk):
@@ -1133,6 +1182,8 @@ class Class_szfast(object):
 
     def rs_drag(self):
         try:
+            if self.cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+                return self.cp_predicted_der[cosmopower_derived_params_idx_dict['rs_d']]
             return self.cp_predicted_der[13]
         except AttributeError:
             return 0

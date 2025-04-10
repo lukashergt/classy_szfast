@@ -6,6 +6,7 @@ import logging
 import os
 import numpy as np
 import time
+from .cosmopower import cosmopower_derived_params_names, cosmopower_derived_params_idx_dict, cp_der_nn
 
 import warnings
 
@@ -447,7 +448,7 @@ class classy_sz(classy):
 
         try:
             
-            params_values['ln10^{10}A_s'] = params_values.pop("logA")
+            #params_values['ln10^{10}A_s'] = params_values.pop("logA")
             
             self.set(params_values)
         
@@ -581,8 +582,38 @@ class classy_sz(classy):
             if collector.post:
                 state[product] = collector.post(*state[product])
         # Prepare derived parameters
+        cosmo_model_dict = {0: 'lcdm', 1: 'mnu', 2: 'neff', 3: 'wcdm', 4: 'ede', 5: 'mnu-3states', 6: 'ede-v2', 7: 'LCDM', 8: 'LCDM_Mnu-d3', 9: 'LCDM_OmegaK'}
+        cosmo_model = cosmo_model_dict[self.extra_args['cosmo_model']]
+        if cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            params_listvalues_dict = {}
+            for k, v in zip(params_values.keys(),params_values.values()):
+                params_listvalues_dict[k]=[v]
+            params_listvalues_dict['ln10^{10}A_s'] = params_listvalues_dict.get('logA')
+            cp_predicted_der = cp_der_nn[cosmo_model].ten_to_predictions_np(params_listvalues_dict)[0]
+            derived_params_dict = {}
+            for p in self.derived_extra:
+                if p in cosmopower_derived_params_names:
+                    derived_params_dict[p] = cp_predicted_der[cosmopower_derived_params_idx_dict[p]]
 
+            derived_idx_dict = {}
+            output_idx_dict = {}
+            special_params = ['theta_s_100', 'theta_star_100', 'z_eq', 'tau_eq']
+            for p in special_params:
+                if p in self.derived_extra:
+                    derived_idx_dict[p] = self.derived_extra.index(p)
+                    self.derived_extra.remove(p)
+                if p in self.output_params:
+                    output_idx_dict[p] = self.output_params.index(p)
+                    self.output_params.remove(p)
         d, d_extra = self._get_derived_all(derived_requested=want_derived)
+        if cosmo_model in ['LCDM', 'LCDM_Mnu-d3', 'LCDM_OmegaK']:
+            for p in special_params:
+                if p in derived_idx_dict:
+                    self.derived_extra.insert(derived_idx_dict[p], p)
+                if p in output_idx_dict:
+                    self.output_params.insert(output_idx_dict[p], p)
+            d.update(derived_params_dict)
+            d_extra.update(derived_params_dict)
 
         if want_derived:
 
