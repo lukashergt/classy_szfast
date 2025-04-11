@@ -118,6 +118,8 @@ emulator_dict['LCDM']['default']['n_s'] = 0.9665
 emulator_dict['LCDM']['default']['N_ur'] = 2.0328
 emulator_dict['LCDM']['default']['N_ncdm'] = 1
 emulator_dict['LCDM']['default']['m_ncdm'] = 0.06
+emulator_dict['LCDM']['default']['deg_ncdm'] = 1
+emulator_dict['LCDM']['default']['T_cmb'] = 2.7255
 
 emulator_dict['LCDM_Mnu-d3']['TT'] = 'TT_v0'
 emulator_dict['LCDM_Mnu-d3']['TE'] = 'TE_v0'
@@ -138,8 +140,9 @@ emulator_dict['LCDM_Mnu-d3']['default']['omega_cdm'] = 0.11933
 emulator_dict['LCDM_Mnu-d3']['default']['n_s'] = 0.9665
 emulator_dict['LCDM_Mnu-d3']['default']['N_ur'] = 0.00641
 emulator_dict['LCDM_Mnu-d3']['default']['N_ncdm'] = 1
-emulator_dict['LCDM_Mnu-d3']['default']['deg_ncdm'] = 3
 emulator_dict['LCDM_Mnu-d3']['default']['m_ncdm'] = 0.06
+emulator_dict['LCDM_Mnu-d3']['default']['deg_ncdm'] = 3
+emulator_dict['LCDM_Mnu-d3']['default']['T_cmb'] = 2.7255
 
 emulator_dict['LCDM_OmegaK']['TT'] = 'TT_v0'
 emulator_dict['LCDM_OmegaK']['TE'] = 'TE_v0'
@@ -161,6 +164,8 @@ emulator_dict['LCDM_OmegaK']['default']['n_s'] = 0.9665
 emulator_dict['LCDM_OmegaK']['default']['N_ur'] = 2.0328
 emulator_dict['LCDM_OmegaK']['default']['N_ncdm'] = 1
 emulator_dict['LCDM_OmegaK']['default']['m_ncdm'] = 0.06
+emulator_dict['LCDM_OmegaK']['default']['deg_ncdm'] = 1
+emulator_dict['LCDM_OmegaK']['default']['T_cmb'] = 2.7255
 emulator_dict['LCDM_OmegaK']['default']['Omega_k'] = 0.0
 
 emulator_dict['lcdm']['TT'] = 'TT_v1'
